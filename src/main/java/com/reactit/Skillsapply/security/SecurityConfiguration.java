@@ -22,19 +22,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
-//        http.csrf().disable().authorizeRequests().antMatchers("/signup/**").permitAll();
-//        http.
-//                authorizeRequests().antMatchers("/signup/**").permitAll();
-        http.authorizeRequests()
-                .antMatchers("/users/signup").permitAll()  //context path here
-                .anyRequest().authenticated();
+        http.csrf().disable().authorizeRequests().antMatchers("/oauth/token").permitAll();
     }
 
 
-    @Override
-    public void configure(WebSecurity webSecurity) throws Exception {
-        webSecurity.ignoring().antMatchers("/signup");
-    }
 
     @Bean
     @Override
