@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.Date;
 import java.util.List;
 
+import com.reactit.Skillsapply.configuration.ValidPassword;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
@@ -24,11 +25,11 @@ public class User {
 
     @Id
     private String id;
-
-    @NotNull(message = "User's first name must not be null")
+//
+//    @NotNull(message = "User's first name must not be null")
     @NotBlank(message = "not blank")
     private String firstName;
-    @NotNull
+//    @NotNull
     private String lastName;
 
 //    @Column(unique = true)
@@ -44,7 +45,7 @@ public class User {
     private boolean emailVerified;
 
     @JsonProperty(access = Access.WRITE_ONLY)
-//    @Length(min = 2, max = 5,message ="password must be between 8 and 20 characters !")
+    @ValidPassword
     private String password;
     private List<String> roles;
 
@@ -52,7 +53,10 @@ public class User {
 
     }
 
-    public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, int phoneNumber, Date birthDate, String img, String address, boolean emailVerified, String password, List<String> roles) {
+    public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, int phoneNumber,
+                Date birthDate, String img, String address, boolean emailVerified,
+                String password,
+                List<String> roles) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -79,6 +83,7 @@ public class User {
     }
 
     public void setId(String id) { this.id = id; }
+
 
     public String getFirstName() {
         return firstName;
@@ -144,10 +149,10 @@ public class User {
         this.emailVerified = emailVerified;
     }
 
+
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
