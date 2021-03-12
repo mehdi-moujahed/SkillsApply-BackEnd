@@ -4,11 +4,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import java.io.Console;
+import java.security.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +37,7 @@ import javax.persistence.Column;
 import javax.persistence.EntityListeners;
 import javax.persistence.PrePersist;
 import javax.validation.Valid;
-import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -46,16 +54,18 @@ public class User {
     private String id;
 //
 //    @NotNull(message = "User's first name must not be null")
-    @NotBlank(message = "not blank")
+    @NotBlank(message = "Candidate FirstName cannot be blank or null")
     private String firstName;
-//    @NotNull
+
+    @NotBlank(message = "Candidate LastName cannot be blank or null")
     private String lastName;
 
-//    @Column(unique = true)
-    @Indexed(unique = true)
+//    @Indexed(unique = true)
+    @Email(message = "Address Mail Not Valid")
+    @Column(unique = true)
     private String email;
 
-    private int phoneNumber;
+    private String phoneNumber;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
     private Date birthDate;
@@ -66,21 +76,28 @@ public class User {
     @JsonProperty(access = Access.WRITE_ONLY)
 //    @ValidPassword
     private String password;
-    private List<String> roles;
+    private String roles;
+
+    @DateTimeFormat
+    private Date createdAt;
+
+//    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+//    LocalDateTime now = LocalDateTime.now();
+
+
+//    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    Date date = new Date();
+
 
     public User() {
 
     }
 
-//    @PrePersist
-//    public void getPasswordBeforePersist(){
-//        log.info("User Password : "+password);
-//    }
 
-    public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, int phoneNumber,
+    public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, String phoneNumber,
                 Date birthDate, String img, String address, boolean emailVerified,
                 String password,
-                List<String> roles) {
+                String roles) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -133,11 +150,11 @@ public class User {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
@@ -173,8 +190,13 @@ public class User {
         this.emailVerified = emailVerified;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
 
-
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public String getPassword() {
         return password;
@@ -183,11 +205,11 @@ public class User {
         this.password = password;
     }
 
-    public List<String> getRoles() {
+    public String getRoles() {
         return roles;
     }
 
-    public void setRoles(List<String> roles) {
+    public void setRoles(String roles) {
         this.roles = roles;
     }
 

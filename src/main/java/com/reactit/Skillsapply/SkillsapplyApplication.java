@@ -8,10 +8,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.datetime.DateFormatter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import javax.validation.ConstraintValidatorContext;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
@@ -25,7 +29,13 @@ public class SkillsapplyApplication {
 //	private PasswordEncoder passwordEncoder;
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(SkillsapplyApplication.class, args);
+
+//		LocalDate now = LocalDate.now();
+//		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd LLLL yyyy");
+//		System.out.println(now.format(dtf));
+
 	}
 
 //	@Override
