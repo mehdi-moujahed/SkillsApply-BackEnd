@@ -6,6 +6,11 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+
+import java.util.Map;
 
 @Configuration
 @EnableResourceServer
@@ -23,4 +28,15 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         http.csrf().disable().authorizeRequests().antMatchers("/users/signup").permitAll();
 
     }
+
+
+
+//    public static class JwtConverter extends DefaultAccessTokenConverter  {
+//        @Override
+//        public OAuth2Authentication extractAuthentication(Map<String, ?> map) {
+//            OAuth2Authentication auth = super.extractAuthentication(map);
+//            auth.setDetails(map); //this will get spring to copy JWT content into Authentication
+//            return auth;
+//        }
+//    }
 }

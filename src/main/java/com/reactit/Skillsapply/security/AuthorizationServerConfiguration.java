@@ -1,6 +1,7 @@
 package com.reactit.Skillsapply.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,9 +28,16 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Value("${SkillsApply.app.tokenExpirationMs}")
+    private int tokenExpirationMs;
+
+    @Value("${SkillsApply.app.refreshTokenExpirationMs}")
+    private int refreshTokenExpirationMs;
+
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security.allowFormAuthenticationForClients(); //For authenticating client using the form parameters instead of basic auth
+        security.allowFormAuthenticationForClients(); //For authenticating client using the form parameters instead of
+        // basic auth
     }
 
     @Override
@@ -39,8 +47,8 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
                 .secret(passwordEncoder.encode("secret"))
                 .authorizedGrantTypes("password", "client_credentials", "refresh_token")
                 .scopes("all")
-                .accessTokenValiditySeconds(3600)
-                .refreshTokenValiditySeconds(86400);
+                .accessTokenValiditySeconds(tokenExpirationMs)
+                .refreshTokenValiditySeconds(refreshTokenExpirationMs);
     }
 
     @Override
@@ -57,6 +65,8 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     public TokenStore tokenStore() {
         return new InMemoryTokenStore();
     }
+
+
 
 }
 

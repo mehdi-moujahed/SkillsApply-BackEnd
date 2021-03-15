@@ -52,7 +52,7 @@ public class User {
 
     @Id
     private String id;
-//
+
 //    @NotNull(message = "User's first name must not be null")
     @NotBlank(message = "Candidate FirstName cannot be blank or null")
     private String firstName;
@@ -81,18 +81,8 @@ public class User {
     @DateTimeFormat
     private Date createdAt;
 
-//    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-//    LocalDateTime now = LocalDateTime.now();
-
-
-//    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    Date date = new Date();
-
-
     public User() {
-
     }
-
 
     public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, String phoneNumber,
                 Date birthDate, String img, String address, boolean emailVerified,
@@ -109,14 +99,6 @@ public class User {
         this.password = password;
         this.roles = roles;
     }
-
-    //    public User(String firstName, String lastName, String email, String password, List<String> roles) {
-//        this.firstName = firstName;
-//        this.lastName = lastName;
-//        this.email = email;
-//        this.password = password;
-//        this.roles = roles;
-//    }
 
 
     public String getId() {
@@ -201,6 +183,7 @@ public class User {
     public String getPassword() {
         return password;
     }
+
     public void setPassword(String password) {
         this.password = password;
     }
