@@ -3,7 +3,8 @@ package com.reactit.Skillsapply.controller;
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.model.User;
 import com.reactit.Skillsapply.repository.UserRepository;
-import com.reactit.Skillsapply.service.UserDetailsImpl;
+import com.reactit.Skillsapply.service.FilesStorageService;
+import com.reactit.Skillsapply.service.FilesStorageServiceImpl;
 import com.reactit.Skillsapply.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,11 +17,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -45,6 +49,25 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    FilesStorageService storageService;
+
+
+
+
+
+
+    @PostMapping("/uploadPhoto")
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            storageService.save(file);
+            return new ResponseEntity("Uploaded the file successfully: "+ file.getOriginalFilename(),HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity("Could not upload the file: " + file.getOriginalFilename() + "!"
+                   ,HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
 
     @ApiOperation(value = "List All Candidates")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -62,10 +85,28 @@ public class UserController {
 //
 ////            System.out.println( "My custom claim value: " + decodedDetails.get("MyClaim") );
 //        }
-        UserDetailsImpl userDetails ;
 
         return this.userService.getAll();
     }
+
+
+
+//    @PostMapping("/photos/add")
+//    public ResponseEntity addPhoto(@RequestParam("title") String title,
+//                           @RequestParam("image") MultipartFile image, Model model)
+//            throws IOException {
+//        String id = photoService.addPhoto(title, image);
+//        return new ResponseEntity( "Photo Added Successfully\nPhoto id :"+id, HttpStatus.OK);
+//    }
+//
+//    @GetMapping("/photos/{id}")
+//    public ResponseEntity getPhoto(@PathVariable String id, Model model) {
+//        Photo photo = photoService.getPhoto(id);
+//        model.addAttribute("title", photo.getTitle());
+//        model.addAttribute("image",
+//                Base64.getEncoder().encodeToString(photo.getImage().getData()));
+//        return new ResponseEntity( "photo exists with id : "+photo.getId(), HttpStatus.OK);
+//    }
 
     @ApiOperation(value = "Update User Password")
     @PreAuthorize("hasAuthority('USER')")
@@ -105,33 +146,6 @@ public class UserController {
 
     return new ResponseEntity("Password Updated Successfully",HttpStatus.OK);
     }
-
-//    @PostMapping("/user/updatePassword")
-//    @PreAuthorize("hasRole('READ_PRIVILEGE')")
-//    public GenericResponse changeUserPassword(Locale locale,
-//                                              @RequestParam("password") String password,
-//                                              @RequestParam("oldpassword") String oldPassword) {
-//        User user = userService.findUserByEmail(
-//                SecurityContextHolder.getContext().getAuthentication().getName());
-//
-//        if (!userService.checkIfValidOldPassword(user, oldPassword)) {
-//            throw new InvalidOldPasswordException();
-//        }
-//        userService.changeUserPassword(user, password);
-//        return new GenericResponse(messages.getMessage("message.updatePasswordSuc", null, locale));
-//    }
-
-//    @PostMapping(value = "/updatePassword")
-//    @PreAuthorize("hasAuthority('USER')")
-//    public ResponseEntity<Void> updatePassword(@RequestBody User user2) {
-//
-//        User user = userRepository.findByEmail(
-//                SecurityContextHolder.getContext().getAuthentication().getName());
-//
-//        if(!userRepository.check)
-//
-//        return new ResponseEntity(HttpStatus.OK);
-//    }
 
 
     @ApiOperation(value = "Candidate Registration")
