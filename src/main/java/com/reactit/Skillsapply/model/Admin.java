@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
-@Document(collection = "admin")
+@Document(collection = "admins")
 public class Admin {
     @Id
     private String id;
@@ -34,7 +34,6 @@ public class Admin {
     private String phoneNumber;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
-    @NotBlank
     private Date birthDate;
 
     private String img;
@@ -50,6 +49,10 @@ public class Admin {
 
     @NotBlank
     private String roles;
+
+    private Date createAt;
+
+
 
     public Admin() {
     }
@@ -67,6 +70,14 @@ public class Admin {
         this.emailVerified = false;
         this.password = password;
         this.roles = roles;
+    }
+
+    public Date getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
 
     public String getId() {
