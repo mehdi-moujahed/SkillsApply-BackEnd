@@ -19,13 +19,18 @@ public class Membership {
     @NotBlank
     private double price;
 
+    @NotBlank
+    private String description;
+
     public Membership() {
     }
 
-    public Membership(String duration, String label, double price) {
+    public Membership(int id, String duration, String label, double price, String description) {
+        this.id = id;
         this.duration = duration;
         this.label = label;
         this.price = price;
+        this.description = description;
     }
 
     public int getId() {
@@ -34,6 +39,14 @@ public class Membership {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getDuration() {

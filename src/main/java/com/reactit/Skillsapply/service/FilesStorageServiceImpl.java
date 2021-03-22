@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 @Service
 public class FilesStorageServiceImpl implements FilesStorageService{
 
-    private final Path root = Paths.get("E:\\boudj\\Documents\\uploads");
+    public final Path root = Paths.get("E:\\boudj\\Documents\\Test");
 
     @Override
     public void init() {
@@ -28,17 +28,30 @@ public class FilesStorageServiceImpl implements FilesStorageService{
         }
     }
 
+//    @Override
+//    public void save(MultipartFile file) {
+//        try {
+//            String uploadDir = "E:\\boudj\\Documents\\uploads\\";
+//            String filename = "Avatar";
+//            String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+//            Path saveTO = Paths.get(uploadDir + filename + "." + extension);
+////            Files.createDirectory(root);
+//            byte[] bytes = file.getBytes();
+//            Files.write(saveTO, bytes);
+////            Files.copy(file.getInputStream(), saveTO);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
+//        }
+//    }
+
     @Override
-    public void save(MultipartFile file) {
+    public void save(MultipartFile file, String uploadDir, String filename) {
         try {
-            String uploadDir = "E:\\boudj\\Documents\\uploads\\";
-            String filename = "Avatar";
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             Path saveTO = Paths.get(uploadDir + filename + "." + extension);
             byte[] bytes = file.getBytes();
             Files.write(saveTO, bytes);
-
-//            Files.copy(file.getInputStream(), saveTO);
+    //            Files.copy(file.getInputStream(), saveTO);
         } catch (Exception e) {
             throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
         }

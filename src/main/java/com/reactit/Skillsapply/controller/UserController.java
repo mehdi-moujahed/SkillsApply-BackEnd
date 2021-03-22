@@ -1,6 +1,7 @@
 package com.reactit.Skillsapply.controller;
 
 import com.reactit.Skillsapply.dto.UpdatePassword;
+import com.reactit.Skillsapply.dto.UpdateUserProfile;
 import com.reactit.Skillsapply.model.User;
 import com.reactit.Skillsapply.repository.UserRepository;
 import com.reactit.Skillsapply.service.FilesStorageService;
@@ -8,27 +9,23 @@ import com.reactit.Skillsapply.service.FilesStorageServiceImpl;
 import com.reactit.Skillsapply.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
-import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
+
 import java.io.IOException;
-import java.security.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,68 +49,71 @@ public class UserController {
     @Autowired
     FilesStorageService storageService;
 
+    @Autowired
+    FilesStorageServiceImpl filesStorageServiceImpl;
+
+    public static String uploadDirectory = System.getProperty("user.dir")+"/photos";
+
+
+//    @ApiOperation(value = "List All Candidates")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @GetMapping("/getAllCandidates")
+//    public List<User> getAllCandidates() {
+//        return this.userService.getAll();
+//    }
 
 
 
+    @ApiOperation(value = "Update User Profile")
+    @PreAuthorize("hasAuthority('USER')")
+    @RequestMapping(value = "/UpdateProfile/{id}",method = RequestMethod.POST, consumes = { "multipart/form-data" })
+    public ResponseEntity<UpdateUserProfile> updateProfile(@ModelAttribute UpdateUserProfile updateUser,
+                                        @RequestParam("files") MultipartFile[] files,
+                                        @PathVariable("id") String id){
+        Optional<User> dbUser = userRepository.findById(id);
+        if(dbUser.isPresent()){
+            StringBuilder fileNames = new StringBuilder();
+            String uploadDir = "E:\\boudj\\Documents\\uploads\\photos\\"+"User "+dbUser.get().getId()+"\\";
+            String filename = "Avatar";
+            for (MultipartFile file : files) {
+                if(files[0].getContentType().equals("image/jpeg") || files[0].getContentType().equals("image/png")){
+                    Path fileNameAndPath = Paths.get(uploadDirectory, file.getOriginalFilename());
+                    fileNames.append(file.getOriginalFilename()+" ");
+                    try {
+                        if(Files.notExists(Path.of(uploadDir)))
+                        Files.createDirectory(Path.of(uploadDir));
+                        System.out.println("a zeuuuuu "+fileNames.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else
+                    return new ResponseEntity("Pleaser verify your image extension !",HttpStatus.BAD_REQUEST);
 
+            }
+            storageService.save(files[0],uploadDir,filename);
 
-    @PostMapping("/uploadPhoto")
-    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file) {
-        try {
-            storageService.save(file);
-            return new ResponseEntity("Uploaded the file successfully: "+ file.getOriginalFilename(),HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity("Could not upload the file: " + file.getOriginalFilename() + "!"
-                   ,HttpStatus.EXPECTATION_FAILED);
+            User userToEdit = dbUser.get();
+            userToEdit.setFirstName(updateUser.getFirstName());
+            userToEdit.setLastName(updateUser.getLastName());
+            userToEdit.setAddress(updateUser.getAddress());
+            userToEdit.setEmail(updateUser.getEmail());
+            userToEdit.setImg(uploadDir+filename+"."+FilenameUtils.getExtension(files[0].getOriginalFilename()));
+
+            this.userRepository.save(userToEdit);
+
+            return ResponseEntity.ok(updateUser);
         }
+        else
+            return new ResponseEntity("USER NOT FOUND !",HttpStatus.NOT_FOUND);
     }
-
-
-    @ApiOperation(value = "List All Candidates")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/getAllCandidates")
-    public List<User> getAllCandidates() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        System.out.println("authentication : "+authentication);
-//        Object details = authentication.getDetails();
-//        System.out.println("details : "+details);
-//        if ( details instanceof OAuth2AuthenticationDetails){
-//            OAuth2AuthenticationDetails oAuth2AuthenticationDetails = (OAuth2AuthenticationDetails)details;
-//
-//           System.out.println("Decoded DETAILS : "+oAuth2AuthenticationDetails.getDecodedDetails());
-////            Map<String, Object> decodedDetails = (Map<String, Object>)oAuth2AuthenticationDetails.getDecodedDetails();
-//
-////            System.out.println( "My custom claim value: " + decodedDetails.get("MyClaim") );
-//        }
-
-        return this.userService.getAll();
-    }
-
-
-
-//    @PostMapping("/photos/add")
-//    public ResponseEntity addPhoto(@RequestParam("title") String title,
-//                           @RequestParam("image") MultipartFile image, Model model)
-//            throws IOException {
-//        String id = photoService.addPhoto(title, image);
-//        return new ResponseEntity( "Photo Added Successfully\nPhoto id :"+id, HttpStatus.OK);
-//    }
-//
-//    @GetMapping("/photos/{id}")
-//    public ResponseEntity getPhoto(@PathVariable String id, Model model) {
-//        Photo photo = photoService.getPhoto(id);
-//        model.addAttribute("title", photo.getTitle());
-//        model.addAttribute("image",
-//                Base64.getEncoder().encodeToString(photo.getImage().getData()));
-//        return new ResponseEntity( "photo exists with id : "+photo.getId(), HttpStatus.OK);
-//    }
 
     @ApiOperation(value = "Update User Password")
     @PreAuthorize("hasAuthority('USER')")
     @PatchMapping(value ="/updatePassword/{id}")
-    public ResponseEntity<Void> updatePassword(@RequestBody UpdatePassword updatePassword, @RequestHeader("Authorization") String token, @PathVariable("id") String id) {
+    public ResponseEntity<Void> updatePassword(@RequestBody UpdatePassword updatePassword,
+                                               @RequestHeader("Authorization") String token,
+                                               @PathVariable("id") String id) {
 
-//        User user = userRepository.findUserById(id);
         System.out.println(token);
 
         Optional<User> user = userRepository.findById(id);
@@ -176,6 +176,7 @@ public class UserController {
                     else if (passwordLengthCheck && phoneNumberLengthCheck) {
                         user.setPassword(passwordEncoder.encode(user.getPassword()));
                         user.setCreatedAt(new Date());
+                        user.setRoles("USER");
                         User userAdded = userRepository.save(user);
                         return new ResponseEntity("User added successfully, Details :" + "\n"
                                 + user.getFirstName() + "\n"
@@ -184,13 +185,7 @@ public class UserController {
                                 + user.getRoles(),
                                 HttpStatus.OK);
                     }
-
-//                else{
-//                        return new ResponseEntity("Password must contain at least one : Capital letter, Number and Special Characters \n" +
-//                                "phoneNumber must have 8 numbers ", HttpStatus.BAD_REQUEST);
-//                    }
                 }
-
             } else {
                 return new ResponseEntity("User Already exists !", HttpStatus.BAD_REQUEST);
             }

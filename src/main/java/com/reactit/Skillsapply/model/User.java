@@ -66,19 +66,22 @@ public class User  {
 //    @Indexed(unique = true)
     @Email(message = "Address Mail Not Valid")
     @Column(unique = true)
+    @NotBlank(message = "Candidate Email cannot be blank or null")
     private String email;
 
+    @NotBlank(message = "Candidate Phone Number cannot be blank or null")
     private String phoneNumber;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
     private Date birthDate;
     private String img;
+    @NotBlank(message = "Candidate address cannot be blank or null")
     private String address;
     private boolean emailVerified;
 
     @JsonProperty(access = Access.WRITE_ONLY)
-//    @ValidPassword
     private String password;
+
     private String roles;
 
     @DateTimeFormat
