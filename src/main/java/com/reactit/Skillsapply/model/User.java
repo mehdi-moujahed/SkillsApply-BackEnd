@@ -84,16 +84,18 @@ public class User  {
 
     private String roles;
 
+    @NotBlank(message = "Candidate diploma must not be blank or null")
+    private String diploma;
+
     @DateTimeFormat
     private Date createdAt;
 
     public User() {
     }
 
-    public User(@NotNull(message = "User's first name must not be null") String firstName, @NotNull String lastName, String email, String phoneNumber,
-                Date birthDate, String img, String address, boolean emailVerified,
-                String password,
-                String roles) {
+    public User(PasswordEncoder passwordEncoder, String id, String firstName, String lastName, String email, String phoneNumber, Date birthDate, String img, String address, boolean emailVerified, String password, String roles, String diploma, Date createdAt) {
+        this.passwordEncoder = passwordEncoder;
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -101,11 +103,12 @@ public class User  {
         this.birthDate = birthDate;
         this.img = img;
         this.address = address;
-        this.emailVerified = false;
+        this.emailVerified = emailVerified;
         this.password = password;
         this.roles = roles;
+        this.diploma = diploma;
+        this.createdAt = createdAt;
     }
-
 
     public String getId() {
         return id;
@@ -144,6 +147,14 @@ public class User  {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getDiploma() {
+        return diploma;
+    }
+
+    public void setDiploma(String diploma) {
+        this.diploma = diploma;
     }
 
     public Date getBirthDate() {

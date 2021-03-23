@@ -4,40 +4,52 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 @Document(collection = "memberships")
 public class Membership {
 
-    @Id
-    private int id;
+//    private static int instanceCounter = 0;
 
-    @NotBlank
+    @Id
+    private String id;
+
     private String duration;
 
     @NotBlank
     private String label;
 
-    @NotBlank
     private double price;
 
     @NotBlank
     private String description;
 
+
     public Membership() {
     }
 
-    public Membership(int id, String duration, String label, double price, String description) {
-        this.id = id;
+    public Membership(String duration, String label, double price, String description) {
         this.duration = duration;
         this.label = label;
         this.price = price;
         this.description = description;
+//        instanceCounter++;
     }
 
-    public int getId() {
+//    public static int getInstanceCounter() {
+//        return instanceCounter;
+//    }
+//
+//    public static void setInstanceCounter(int instanceCounter) {
+//        Membership.instanceCounter = instanceCounter;
+//    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
