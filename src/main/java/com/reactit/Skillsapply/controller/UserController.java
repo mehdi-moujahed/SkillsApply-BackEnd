@@ -149,6 +149,7 @@ public class UserController {
 
 
     @ApiOperation(value = "Candidate Registration")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
     @PostMapping(value = "/signup")
     public ResponseEntity<Void> addCandidate(@RequestBody User user) {
         try {

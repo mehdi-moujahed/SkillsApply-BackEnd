@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
-@Document(collection = "managers")
+@Document(collection = "users")
 public class Manager {
 
     @Id
@@ -35,7 +35,6 @@ public class Manager {
     private String phoneNumber;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
-    @NotBlank
     private Date birthDate;
 
     private String img;
@@ -52,11 +51,19 @@ public class Manager {
     @NotBlank
     private String roles;
 
+    @NotBlank
+    private String companyName;
+
+    private Date createAt;
+
+
     public Manager() {
     }
 
-    public Manager(String firstName, String lastName, String email, String phoneNumber, Date birthDate,
-                   String img, String address, String password, String roles) {
+    public Manager(String id, String firstName, String lastName, String email, String phoneNumber,
+                   Date birthDate, String img, String address, boolean emailVerified, String password,
+                   String roles, String companyName, Date createAt) {
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -64,9 +71,27 @@ public class Manager {
         this.birthDate = birthDate;
         this.img = img;
         this.address = address;
-        this.emailVerified = false;
+        this.emailVerified = emailVerified;
         this.password = password;
         this.roles = roles;
+        this.companyName = companyName;
+        this.createAt = createAt;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public Date getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
 
     public String getId() {

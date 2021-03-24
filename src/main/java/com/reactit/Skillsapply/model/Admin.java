@@ -13,8 +13,9 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
-@Document(collection = "admins")
+@Document(collection = "users")
 public class Admin {
+
     @Id
     private String id;
 
