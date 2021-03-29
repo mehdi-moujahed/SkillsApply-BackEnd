@@ -57,12 +57,6 @@ public class AdminController {
         return adminRepository.findByRoles("ADMIN");
     }
 
-    @ApiOperation(value = "List All Candidates")
-//    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
-    @GetMapping("/getAllCandidates")
-    public List<User> getAllCandidates() {
-        return userRepository.findByRoles("USER");
-    }
 
     @ApiOperation(value = "List All Memberships Packs")
 //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
@@ -169,55 +163,6 @@ public class AdminController {
         return null;
     }
 
-    @ApiOperation(value = "Adding new RH Manager")
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    @PostMapping(value = "/addManager")
-    public ResponseEntity<Void> addNewManager(@RequestBody Manager manager){
-        try {
-            if (managerRepository.findByEmail(manager.getEmail()) == null) {
-                if (manager.getPassword().length() < 8 || manager.getPassword().length() > 16) {
-                    return new ResponseEntity("Password must be between 8 and 16 characters",
-                            HttpStatus.BAD_REQUEST);
-                } else {
-                    Pattern p = Pattern.compile("[^A-Za-z0-9]");
-                    Matcher m = p.matcher(manager.getPassword());
-                    boolean passwordLengthCheck = m.find();
-
-                    Pattern pattern = Pattern.compile("^[0-9]{8}$");
-                    Matcher matcher = pattern.matcher(manager.getPhoneNumber());
-                    boolean phoneNumberLengthCheck = matcher.find();
-                    System.out.println("Password Length : " + manager.getPassword().length());
-
-                    if (passwordLengthCheck == false)
-                        return new ResponseEntity("Password must contain at least one : Capital letter, " +
-                                "Number and Special Characters", HttpStatus.BAD_REQUEST);
-
-                    else if (phoneNumberLengthCheck == false)
-                        return new ResponseEntity("phoneNumber must have 8 numbers ", HttpStatus.BAD_REQUEST);
-
-                    else if (passwordLengthCheck && phoneNumberLengthCheck) {
-                        manager.setPassword(passwordEncoder.encode(manager.getPassword()));
-                        manager.setCreateAt(new Date());
-                        manager.setRoles("MANAGER");
-                        Manager managerAdded = managerRepository.save(manager);
-                        return new ResponseEntity("RH Manager added successfully, Details :" + "\n"
-                                + manager.getFirstName() + "\n"
-                                + manager.getLastName() + "\n" + "Manager ID : "
-                                + manager.getId() + "\n" + "Role : "
-                                + manager.getRoles() + "\n" +"Company : "
-                                + manager.getCompanyName(),
-                                HttpStatus.OK);
-                    }
-                }
-            } else {
-                return new ResponseEntity("Email is Already in use !", HttpStatus.BAD_REQUEST);
-            }
-
-        } catch (ConstraintViolationException e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        return null;
-    }
 
 
     @ApiOperation(value = "Listing All RH Managers")

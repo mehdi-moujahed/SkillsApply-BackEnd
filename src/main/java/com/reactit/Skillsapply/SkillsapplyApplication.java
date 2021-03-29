@@ -26,29 +26,11 @@ import java.util.Map;
 @EnableSwagger2
 public class SkillsapplyApplication {
 
-//	@Autowired
-//	private UserRepository userRepository;
-//
-//	@Autowired
-//	private PasswordEncoder passwordEncoder;
 
 	public static void main(String[] args) {
-
 		SpringApplication.run(SkillsapplyApplication.class, args);
-
-//		LocalDate now = LocalDate.now();
-//		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd LLLL yyyy");
-//		System.out.println(now.format(dtf));
-
+		System.out.println("dsssss");
 	}
 
-//	@Override
-//	public void run(String... args) throws Exception {
-//		if (this.userRepository.findByEmail("moujahedmehdi@gmail.Com") == null) {
-//
-////			User user = new User("Mehdi", "Moujahed", "moujahedmehdi@gmail.Com", passwordEncoder.encode("mehdi123"), Arrays.asList("ADMIN"));
-//			User user = new User("Mehdi","Moujahed","moujahedmehdi@gmail.com", 55287186, 1997-01-26,"ss","sousse", passwordEncoder.encode("mehdi123"),Arrays.asList("ADMIN"));
-//			this.userRepository.save(user);
-//		}
-//	}
+
 }
