@@ -20,7 +20,7 @@ public interface QuestionsRepository  extends MongoRepository<Questions, String>
 
 interface AnswerCustomRepository {
 
-    List<Questions> findAllAnswersByQuestion();
+    List<QuestionDTO> findAllAnswersByQuestion();
 }
 
 
@@ -30,15 +30,14 @@ class AnswerCustomRepositoryImpl implements AnswerCustomRepository {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public List<Questions> findAllAnswersByQuestion() {
+    public List<QuestionDTO> findAllAnswersByQuestion() {
         LookupOperation lookup = LookupOperation.newLookup()
-                .from("Questions")
-                .localField("answersID")
-                .foreignField("_id")
-                .as("answer");
-        Aggregation aggregation = Aggregation.newAggregation(
-
-                lookup);
-        return mongoTemplate.aggregate(aggregation, Answers.class, Questions.class).getMappedResults();
+                .from(mongoTemplate.getCollectionName(Answers.class))
+                .localField("answersID[]")
+                .foreignField("id")
+                .as("answers");
+        Aggregation aggregation = Aggregation.newAggregation(QuestionDTO.class, lookup);
+        return mongoTemplate.aggregate(aggregation, mongoTemplate.getCollectionName(Questions.class),
+                QuestionDTO.class).getMappedResults();
     }
 }

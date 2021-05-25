@@ -34,8 +34,7 @@ public class Manager {
     @NotBlank
     private String phoneNumber;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
-    private Date birthDate;
+
 
     private String img;
 
@@ -56,19 +55,21 @@ public class Manager {
 
     private Date createAt;
 
+    private String token;
+
+    private Date CreatedAtToken;
 
     public Manager() {
     }
 
     public Manager(String id, String firstName, String lastName, String email, String phoneNumber,
-                   Date birthDate, String img, String address, boolean emailVerified, String password,
-                   String roles, String companyName, Date createAt) {
+                   String img, String address, boolean emailVerified, String password, String roles,
+                   String companyName, Date createAt) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.birthDate = birthDate;
         this.img = img;
         this.address = address;
         this.emailVerified = emailVerified;
@@ -76,6 +77,22 @@ public class Manager {
         this.roles = roles;
         this.companyName = companyName;
         this.createAt = createAt;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Date getCreatedAtToken() {
+        return CreatedAtToken;
+    }
+
+    public void setCreatedAtToken(Date createdAtToken) {
+        CreatedAtToken = createdAtToken;
     }
 
     public String getCompanyName() {
@@ -134,13 +151,6 @@ public class Manager {
         this.phoneNumber = phoneNumber;
     }
 
-    public Date getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(Date birthDate) {
-        this.birthDate = birthDate;
-    }
 
     public String getImg() {
         return img;
@@ -190,7 +200,6 @@ public class Manager {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
-                ", birthDate=" + birthDate +
                 ", img='" + img + '\'' +
                 ", address='" + address + '\'' +
                 ", emailVerified=" + emailVerified +

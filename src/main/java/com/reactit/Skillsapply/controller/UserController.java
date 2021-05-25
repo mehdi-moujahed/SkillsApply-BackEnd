@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 //@EnableMongoAuditing
 @RequestMapping("/users")
 @Validated
+@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -55,12 +56,7 @@ public class UserController {
     public static String uploadDirectory = System.getProperty("user.dir")+"/photos";
 
 
-//    @ApiOperation(value = "List All Candidates")
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/getAllCandidates")
-//    public List<User> getAllCandidates() {
-//        return this.userService.getAll();
-//    }
+
 
 
 
@@ -82,7 +78,7 @@ public class UserController {
                     try {
                         if(Files.notExists(Path.of(uploadDir)))
                         Files.createDirectory(Path.of(uploadDir));
-                        System.out.println("a zeuuuuu "+fileNames.toString());
+                        System.out.println(" file directory "+fileNames.toString());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

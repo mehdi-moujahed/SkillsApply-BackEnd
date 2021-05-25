@@ -12,23 +12,30 @@ import com.reactit.Skillsapply.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RequestMapping("/admin")
 @Api( description="API For All Operations Concerning Admin")
 @RestController
+@CrossOrigin
 public class AdminController {
 
     @Autowired
@@ -48,6 +55,63 @@ public class AdminController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+//    @ApiOperation(value = "Admin Registration")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/sendmail")
+    public ResponseEntity<Map<String, Object>> sendMailVerification() throws MessagingException, IOException  {
+        Map<String, Object> response = new HashMap<>();
+
+        MimeMessage msg = javaMailSender.createMimeMessage();
+
+        // true = multipart message
+        MimeMessageHelper helper = new MimeMessageHelper(msg, true);
+
+        helper.setTo("boudja14@hotmail.com");
+
+        helper.setSubject("Activation Compte SkillsApply");
+
+        String token = UUID.randomUUID().toString();
+
+        final String baseUrl =
+                ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        String confirmationUrl
+                = baseUrl+ "/regitrationConfirm.html?token=" + token;
+
+
+        helper.setText("<h1>Activation du compte</h1> " +
+                "<p>Veuillez cliquer sur ce lien pour activer votre compte <b>SkillsApply</b></p> " +
+                "<a href='"+confirmationUrl+"'>bezadlung</a>"+
+                "<br> <p>Skills Apply team support</p>" +
+                " <img src='cid:myLogo'>", true);
+        helper.addInline("myLogo", new ClassPathResource("static/logo.png"));
+
+        // hard coded a file path
+//        FileSystemResource file = new FileSystemResource(new File("E:\\logo192.png"));
+//
+//        helper.addAttachment("my_photo.png", file);
+
+        javaMailSender.send(msg) ;
+
+        response.put("message",baseUrl);
+        response.put("url front",confirmationUrl);
+        return new ResponseEntity(response,HttpStatus.OK);
+    }
+
+
+    @ApiOperation(value = "get admin by id")
+    @GetMapping("/getAdminByID/{id}")
+    public Optional<Admin> getAdminByID( @PathVariable("id") String id) {
+        Optional<Admin> admin = adminRepository.findById(id);
+
+        if(admin.isPresent())
+            return admin;
+        else
+            return null;
+    }
 
 
     @ApiOperation(value = "List All Admins")
@@ -117,12 +181,14 @@ public class AdminController {
     @ApiOperation(value = "Admin Registration")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping(value = "/signup")
-    public ResponseEntity<Void> adminRegistration(@RequestBody Admin admin ) {
+    public ResponseEntity<Map<String, Object>> adminRegistration(@RequestBody Admin admin ) {
+        Map<String, Object> response = new HashMap<>();
         try {
             if (adminRepository.findByEmail(admin.getEmail()) == null) {
                 if (admin.getPassword().length() < 8 || admin.getPassword().length() > 16) {
-                    return new ResponseEntity("Password must be between 8 and 16 characters",
-                            HttpStatus.BAD_REQUEST);
+                    response.put("message", "Password must be between 8 and 16 characters\" ");
+                    return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+
                 } else {
                     Pattern p = Pattern.compile("[^A-Za-z0-9]");
                     Matcher m = p.matcher(admin.getPassword());
@@ -133,28 +199,33 @@ public class AdminController {
                     boolean phoneNumberLengthCheck = matcher.find();
                     System.out.println("Password Length : " + admin.getPassword().length());
 
-                    if (passwordLengthCheck == false)
-                        return new ResponseEntity("Password must contain at least one : Capital letter, " +
-                                "Number and Special Characters", HttpStatus.BAD_REQUEST);
+                    if (passwordLengthCheck == false) {
+                        response.put("message", "Password must contain at least one : Capital letter Number and Special Characters");
+                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                    }
 
-                    else if (phoneNumberLengthCheck == false)
-                        return new ResponseEntity("phoneNumber must have 8 numbers ", HttpStatus.BAD_REQUEST);
+
+                    else if (phoneNumberLengthCheck == false) {
+                        response.put("message", "phoneNumber must have 8 numbers ");
+                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                    }
 
                     else if (passwordLengthCheck && phoneNumberLengthCheck) {
                         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
                         admin.setCreateAt(new Date());
                         admin.setRoles("ADMIN");
                         Admin adminAdded = adminRepository.save(admin);
-                        return new ResponseEntity("Admin added successfully, Details :" + "\n"
-                                + admin.getFirstName() + "\n"
-                                + admin.getLastName() + "\n" + "admin ID : "
-                                + admin.getId() + "\n" + "Role : "
-                                + admin.getRoles(),
-                                HttpStatus.OK);
+                        response.put("message","Admin added successfully, Details :");
+                        response.put("FirstName",admin.getFirstName());
+                        response.put("LastName",admin.getLastName());
+                        response.put("Id",admin.getId());
+                        response.put("Roles",admin.getRoles());
+                        return new ResponseEntity(response, HttpStatus.OK);
                     }
                 }
             } else {
-                return new ResponseEntity("Email is Already in use !", HttpStatus.BAD_REQUEST);
+                response.put("message","Email is Already in use !");
+                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
             }
 
         } catch (ConstraintViolationException e) {
@@ -183,7 +254,6 @@ public class AdminController {
             managerEdit.setLastName(manager.getLastName());
             managerEdit.setAddress(manager.getAddress());
             managerEdit.setEmail(manager.getEmail());
-            managerEdit.setBirthDate(manager.getBirthDate());
             managerEdit.setPhoneNumber(manager.getPhoneNumber());
             managerRepository.save(managerEdit);
             return new ResponseEntity("Manager Account updated successfully",HttpStatus.OK);
