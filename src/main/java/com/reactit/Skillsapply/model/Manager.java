@@ -53,7 +53,7 @@ public class Manager {
     @NotBlank
     private String companyName;
 
-    private Date createAt;
+    private Date createdAt;
 
     private String token;
 
@@ -64,7 +64,7 @@ public class Manager {
 
     public Manager(String id, String firstName, String lastName, String email, String phoneNumber,
                    String img, String address, boolean emailVerified, String password, String roles,
-                   String companyName, Date createAt) {
+                   String companyName, Date createdAt) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -76,7 +76,7 @@ public class Manager {
         this.password = password;
         this.roles = roles;
         this.companyName = companyName;
-        this.createAt = createAt;
+        this.createdAt = createdAt;
     }
 
     public String getToken() {
@@ -103,12 +103,12 @@ public class Manager {
         this.companyName = companyName;
     }
 
-    public Date getCreateAt() {
-        return createAt;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateAt(Date createAt) {
-        this.createAt = createAt;
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String getId() {

@@ -1,50 +1,83 @@
 package com.reactit.Skillsapply.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.Date;
 
+@Document(collection = "Tests")
 public class Test {
 
     @Id
-    private int id;
+    private String id;
 
-    @NotBlank
+    @NotNull
     private String name;
 
-    @NotBlank
-    private String technology;
-
-    @NotBlank
     private String technologyLogo;
 
-    @NotBlank
+    @NotNull
     private String description;
 
-    @NotBlank
-    private String duration;
+    @NotNull
+    private float duration;
 
-    @NotBlank
-    private int score;
+    private float score;
+
+    private float level;
+
+    @NotNull
+    private float rate;
+
+    private Date createdAt;
+
+    private ArrayList<String> questionsID;
+
+    private String managerID;
 
     public Test() {
     }
 
-    public Test(int id, @NotBlank String name, @NotBlank String technology, @NotBlank String description,
-                @NotBlank String duration, int score) {
+    public Test(String id, @NotNull String name, String technologyLogo, @NotNull String description,
+                @NotNull float duration,  float score,  float level, @NotNull float rate,
+                ArrayList<String> questionsID,   Date createdAt,   String managerID) {
         this.id = id;
         this.name = name;
-        this.technology = technology;
+        this.technologyLogo = technologyLogo;
         this.description = description;
         this.duration = duration;
         this.score = score;
+        this.level = level;
+        this.rate = rate;
+        this.questionsID = questionsID;
+        this.createdAt=createdAt;
+        this.managerID=managerID;
     }
 
-    public int getId() {
+    public String getManagerID() {
+        return managerID;
+    }
+
+    public void setManagerID(String managerID) {
+        this.managerID = managerID;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -54,14 +87,6 @@ public class Test {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getTechnology() {
-        return technology;
-    }
-
-    public void setTechnology(String technology) {
-        this.technology = technology;
     }
 
     public String getTechnologyLogo() {
@@ -80,20 +105,44 @@ public class Test {
         this.description = description;
     }
 
-    public String getDuration() {
+    public float getDuration() {
         return duration;
     }
 
-    public void setDuration(String duration) {
+    public void setDuration(float duration) {
         this.duration = duration;
     }
 
-    public int getScore() {
+    public float getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(float score) {
         this.score = score;
+    }
+
+    public ArrayList<String> getQuestionsID() {
+        return questionsID;
+    }
+
+    public void setQuestionsID(ArrayList<String> questionsID) {
+        this.questionsID = questionsID;
+    }
+
+    public float getLevel() {
+        return level;
+    }
+
+    public void setLevel(float level) {
+        this.level = level;
+    }
+
+    public float getRate() {
+        return rate;
+    }
+
+    public void setRate(float rate) {
+        this.rate = rate;
     }
 
     @Override
@@ -101,11 +150,13 @@ public class Test {
         return "Test{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", technology='" + technology + '\'' +
                 ", technologyLogo='" + technologyLogo + '\'' +
                 ", description='" + description + '\'' +
                 ", duration='" + duration + '\'' +
                 ", score=" + score +
+                ", level=" + level +
+                ", rate=" + rate +
+                ", questionsID=" + questionsID +
                 '}';
     }
 }

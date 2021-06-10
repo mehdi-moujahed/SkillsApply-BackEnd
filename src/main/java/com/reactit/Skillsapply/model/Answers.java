@@ -6,22 +6,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import javax.validation.constraints.NotNull;
 
 public class Answers {
 
     @Id
     private String id;
 
+    @NotNull
     private String answer;
 
+    @NotNull
     private boolean status;
 
 
-    public Answers(String answer, boolean status) {
+    public Answers() {
+    }
+
+    public Answers(String id, @NotNull String answer, @NotNull boolean status) {
+        this.id = id;
         this.answer = answer;
         this.status = status;
-    }
-    public Answers() {
     }
 
     public String  getId() {

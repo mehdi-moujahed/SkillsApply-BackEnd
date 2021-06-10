@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,24 +19,37 @@ public class Questions {
     @Id
     private String id;
 
-//    @NotBlank
+    @NotNull
     private String question;
 
-//    @NotEmpty
-//    @OneToMany
+    @NotNull
     private ArrayList<String> answersID;
 
+    @NotNull
+    private String questionType;
 
-    private String type;
+    @NotNull
+    private float duration;
+
+    @NotNull
+    private float level;
+
+    @NotNull
+    private float points;
 
     public Questions() {
     }
 
-    public Questions( @NotBlank String question, @NotBlank ArrayList<String> answersID, @NotBlank String type) {
-
+    public Questions(String id, String question, ArrayList<String> answersID, @NotNull String questionType,
+                     @NotNull float duration, @NotNull float level,
+                     @NotNull float points) {
+        this.id = id;
         this.question = question;
         this.answersID = answersID;
-        this.type = type;
+        this.questionType = questionType;
+        this.duration = duration;
+        this.level = level;
+        this.points = points;
     }
 
     public String getId() {
@@ -54,29 +68,44 @@ public class Questions {
         this.question = question;
     }
 
-    public ArrayList<String> getAnswers() {
-        return this.answersID;
+    public ArrayList<String> getAnswersID() {
+        return answersID;
     }
 
-    public void setAnswers(ArrayList<String> answersID) {
+    public void setAnswersID(ArrayList<String> answersID) {
         this.answersID = answersID;
     }
 
-    public String getType() {
-        return type;
+    public String getQuestionType() {
+        return questionType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setQuestionType(String questionType) {
+        this.questionType = questionType;
     }
 
-    @Override
-    public String toString() {
-        return "questions{" +
-                "id=" + id +
-                ", question='" + question + '\'' +
-                ", answers=" + answersID +
-                ", type='" + type + '\'' +
-                '}';
+
+    public float getDuration() {
+        return duration;
+    }
+
+    public void setDuration(float duration) {
+        this.duration = duration;
+    }
+
+    public float getLevel() {
+        return level;
+    }
+
+    public void setLevel(float level) {
+        this.level = level;
+    }
+
+    public float getPoints() {
+        return points;
+    }
+
+    public void setPoints(float points) {
+        this.points = points;
     }
 }

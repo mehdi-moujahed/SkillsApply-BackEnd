@@ -1,20 +1,21 @@
 package com.reactit.Skillsapply.controller;
 
 import com.reactit.Skillsapply.dto.QuestionDTO;
+import com.reactit.Skillsapply.dto.TestDTO;
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.model.*;
-import com.reactit.Skillsapply.repository.AnswersRepository;
-import com.reactit.Skillsapply.repository.ManagerRepository;
-import com.reactit.Skillsapply.repository.QuestionsRepository;
-import com.reactit.Skillsapply.repository.UserRepository;
+import com.reactit.Skillsapply.repository.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.expression.spel.ast.OpInc;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,14 +23,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +53,9 @@ public class ManagerController {
     AnswersRepository answersRepository;
 
     @Autowired
+    TestsRepository testsRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -69,13 +72,14 @@ public class ManagerController {
     }
 
 
-    @ApiOperation(value = "List All Candidates")
+    @ApiOperation(value = "List All Questions")
 //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
     @GetMapping("/getAllQuestions")
     public ResponseEntity<Questions> getAllQuestions() {
 //        questionsRepository.findAllAnswersByQuestion().forEach((n)-> System.out.println(n.getAnswer()));
         return new ResponseEntity(questionsRepository.findAllAnswersByQuestion(), HttpStatus.OK);
     }
+
 
 
     @ApiOperation(value = "Adding New Question")
@@ -97,7 +101,7 @@ public class ManagerController {
 
         Questions questions1 = new Questions();
         questions1.setQuestion(questions.getQuestion());
-        questions1.setAnswers(answersID);
+        questions1.setAnswersID(answersID);
         questionsRepository.save(questions1);
 
         return new ResponseEntity("Question Added Successfully !", HttpStatus.OK);
@@ -105,11 +109,102 @@ public class ManagerController {
     }
 
 
+    @ApiOperation(value = "Adding new Test")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PostMapping(value = "/addTest")
+    public ResponseEntity<Map<String, Object>> addTest(@RequestBody TestDTO testDTO){
+        Map<String, Object> response = new HashMap<>();
+
+        Test test = new Test();
+        ArrayList<String> questionsID = new ArrayList<>();
+        AtomicReference<Float> testDuration= new AtomicReference<>((float) 0);
+
+        AtomicReference<Float> nbrTotalTestLevel= new AtomicReference<>((float) 0);
+
+        AtomicReference<Float> nbrTotalTestPoints= new AtomicReference<>((float) 0);
+
+        testDTO.getQuestions().forEach((n)->{
+            ArrayList<String> answersID = new ArrayList<>();
+            n.getAnswers().forEach((answer)->{
+                Answers answers = new Answers();
+                answers.setAnswer(answer.getAnswer());
+                answers.setStatus(answer.isStatus());
+                Answers addedAnswer = answersRepository.save(answers);
+                answersID.add(addedAnswer.getId());
+                System.out.println("answer :" + answer.getAnswer()
+                        + " Status : " + answer.isStatus());
+            });
+            Questions questions1 = new Questions();
+            questions1.setQuestion(n.getQuestion());
+            questions1.setAnswersID(answersID);
+            questions1.setQuestionType(n.getQuestionType());
+            questions1.setLevel(n.getLevel());
+            questions1.setDuration(n.getDuration());
+            questions1.setPoints(n.getPoints());
+            testDuration.updateAndGet(v -> new Float((float) (v + n.getDuration())));
+            Questions questionAdded = questionsRepository.save(questions1);
+            questionsID.add(questionAdded.getId());
+
+            nbrTotalTestLevel.updateAndGet(v -> new Float((float) (v + n.getLevel())));
+
+            nbrTotalTestPoints.updateAndGet(v -> new Float((float) (v + n.getPoints())));
+
+            test.setLevel((Math.round(( new Float(String.valueOf(nbrTotalTestLevel))/questionsID.size())/10)*10));
+
+            System.out.println("question saved successfully"+test.getLevel());
+        });
+        test.setName(testDTO.getName());
+        test.setDescription(testDTO.getDescription());
+        test.setScore((float)nbrTotalTestPoints.get());
+        test.setRate(testDTO.getRate());
+        test.setQuestionsID(questionsID);
+        test.setDuration((float)testDuration.get());
+        test.setManagerID("60a79878a0784e4240d4a619");
+        test.setCreatedAt(new Date());
+
+        testsRepository.save(test);
+        response.put("message","Test Added Succesfully");
+        return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
+
+    @ApiOperation(value = "List All Tests Created")
+//    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
+    @GetMapping("/getCreatedTests/{id}")
+    public ResponseEntity<Map<String, Object>>getCreatedTests(@PathVariable("id") String id,
+                                                              @RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "3") int size,
+                                                              @RequestParam(defaultValue = "") String testName,
+                                                              @RequestParam(defaultValue = "10") int test) {
+        try {
+            List<Test> tests = new ArrayList<Test>();
+            Pageable paging = PageRequest.of(page, size);
+
+            Page<Test> pageTuts;
+            if(test==10) {
+                 pageTuts = testsRepository.findByManagerIDAndNameContainingOrderByCreatedAtDescAllIgnoreCase(id,testName,paging);
+            } else {
+                 pageTuts = testsRepository.findByManagerIDAndNameContainingOrderByRateDescAllIgnoreCase(id,testName,paging);
+            }
+            tests = pageTuts.getContent();
+            Map<String, Object> response = new HashMap<>();
+            response.put("testsCreated", tests);
+            response.put("currentPage", pageTuts.getNumber());
+            response.put("totalItems", pageTuts.getTotalElements());
+            response.put("totalPages", pageTuts.getTotalPages());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
     @ApiOperation(value = "Updating Question And Answers")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping(value = "/updateQuestion/{id}")
     public ResponseEntity<Void> updateQuestionAndAnswers(@RequestBody QuestionDTO questions, @PathVariable("id") String id) {
-
 
         if (questions.getAnswers() != null) {
             if (!questions.getQuestion().equals(null)) {
@@ -148,6 +243,8 @@ public class ManagerController {
             return new ResponseEntity("Question Not Found !", HttpStatus.NOT_FOUND);
     }
 
+
+
     @ApiOperation(value = "Adding new RH Manager")
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PostMapping(value = "/signup")
@@ -177,7 +274,7 @@ public class ManagerController {
                         return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
                     } else if (passwordLengthCheck && phoneNumberLengthCheck) {
                         manager.setPassword(passwordEncoder.encode(manager.getPassword()));
-                        manager.setCreateAt(new Date());
+                        manager.setCreatedAt(new Date());
                         manager.setRoles("MANAGER");
                         sendConrfirmAccount(manager);
                         response.put("message", "Un email vous a été envoyé pour confirmer votre inscription");
@@ -352,35 +449,8 @@ public class ManagerController {
             response.put("message","Compte Introuvable !");
             return new ResponseEntity(response,HttpStatus.BAD_REQUEST);
         }
-
-//        MimeMessage msg = javaMailSender.createMimeMessage();
-//
-//        MimeMessageHelper helper = new MimeMessageHelper(msg, true);
-//
-//        helper.setTo("boudja14@hotmail.com");
-//
-//        helper.setSubject("Activation Compte SkillsApply");
-//
-//        String token = UUID.randomUUID().toString();
-//
-//        final String baseUrl =
-//                ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-//        String confirmationUrl
-//                = baseUrl+ "/regitrationConfirm.html?token=" + token;
-//
-//
-//        helper.setText("<h1>Activation du compte</h1> " +
-//                "<p>Veuillez cliquer sur ce lien pour activer votre compte <b>SkillsApply</b></p> " +
-//                "<a href='"+confirmationUrl+"'>bezadlung</a>"+
-//                "<br> <p>Skills Apply team support</p>" +
-//                " <img src='cid:myLogo'>", true);
-//        helper.addInline("myLogo", new ClassPathResource("static/logo.png"));
-//
-//        javaMailSender.send(msg) ;
-//
-//        response.put("message",baseUrl);
-
     }
+
 
 
     @ApiOperation(value = "Register Confirmation")
@@ -411,14 +481,10 @@ public class ManagerController {
                 response.put("message","la durée de l'email a dépassé les 24h !");
                 return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
             }
-
-
         } else
         {
             response.put("message","Invalid token !");
             return new ResponseEntity(response,HttpStatus.FORBIDDEN);
         }
-
-
     }
 }
