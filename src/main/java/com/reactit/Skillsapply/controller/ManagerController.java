@@ -8,6 +8,8 @@ import com.reactit.Skillsapply.repository.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeComparator;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -28,6 +30,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -63,6 +67,7 @@ public class ManagerController {
 
     @Value("${SkillsApply.app.websiteBaseUrl}")
     private String websiteBaseUrl;
+
 
     @ApiOperation(value = "List All Candidates")
 //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
@@ -161,10 +166,53 @@ public class ManagerController {
         test.setDuration((float)testDuration.get());
         test.setManagerID("60a79878a0784e4240d4a619");
         test.setCreatedAt(new Date());
+        test.setPremiumPack(false);
 
         testsRepository.save(test);
         response.put("message","Test Added Succesfully");
         return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "List All Available Tests")
+    //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
+    @GetMapping("/getAvailableTests")
+    public ResponseEntity<Map<String, Object>>getAvailableTests(@RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "3") int size,
+                                                              @RequestParam(defaultValue = "") String testName,
+                                                              @RequestParam(defaultValue = "10") int timeFilter,
+                                                              @RequestParam(defaultValue = "10") float testLevel,
+                                                              @RequestParam(defaultValue = "2020-01-01") String date1,
+                                                              @RequestParam(defaultValue = "2121-01-26") String date2,
+                                                              @RequestParam(defaultValue = "0")int rate1,
+                                                              @RequestParam(defaultValue = "6")int rate2
+                                                         )
+    {
+        try {
+            List<Test> tests = new ArrayList<Test>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Test> pageTuts;
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+
+            Date date11 = formatter.parse(date1);
+            Date date22 = formatter.parse(date2);
+
+            if(timeFilter==10 ) {
+                pageTuts = testsRepository.findByAndCreatedAtBetweenAndRateBetweenAndPremiumPackIsAndNameContainingAndLevelOrderByCreatedAtDescAllIgnoreCase(date11,date22,rate1,rate2,true,testName,testLevel,paging);
+            } else {
+                pageTuts = testsRepository.findByCreatedAtBetweenAndRateBetweenAndPremiumPackIsAndNameContainingAndLevelOrderByRateDescAllIgnoreCase(date11,date22,rate1,rate2,true,testName,testLevel,paging);
+            }
+            tests = pageTuts.getContent();
+            Map<String, Object> response = new HashMap<>();
+            response.put("availableTests", tests);
+            response.put("currentPage", pageTuts.getNumber());
+            response.put("totalItems", pageTuts.getTotalElements());
+            response.put("totalPages", pageTuts.getTotalPages());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
 
@@ -175,16 +223,26 @@ public class ManagerController {
                                                               @RequestParam(defaultValue = "0") int page,
                                                               @RequestParam(defaultValue = "3") int size,
                                                               @RequestParam(defaultValue = "") String testName,
-                                                              @RequestParam(defaultValue = "10") int test) {
+                                                              @RequestParam(defaultValue = "10") int timeFilter,
+                                                              @RequestParam(defaultValue = "10") float testLevel,
+                                                              @RequestParam(defaultValue = "2020-01-01") String date1,
+                                                              @RequestParam(defaultValue = "2121-01-26") String date2,
+                                                              @RequestParam(defaultValue = "0")int rate1,
+                                                              @RequestParam(defaultValue = "6")int rate2
+                                                              ) {
         try {
             List<Test> tests = new ArrayList<Test>();
             Pageable paging = PageRequest.of(page, size);
-
             Page<Test> pageTuts;
-            if(test==10) {
-                 pageTuts = testsRepository.findByManagerIDAndNameContainingOrderByCreatedAtDescAllIgnoreCase(id,testName,paging);
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+
+            Date date11 = formatter.parse(date1);
+            Date date22 = formatter.parse(date2);
+
+            if(timeFilter==10 ) {
+                 pageTuts = testsRepository.findByCreatedAtBetweenAndRateBetweenAndManagerIDAndNameContainingAndLevelOrderByCreatedAtDescAllIgnoreCase(date11,date22,rate1,rate2,id,testName,testLevel,paging);
             } else {
-                 pageTuts = testsRepository.findByManagerIDAndNameContainingOrderByRateDescAllIgnoreCase(id,testName,paging);
+                 pageTuts = testsRepository.findByCreatedAtBetweenAndRateBetweenAndManagerIDAndNameContainingAndLevelOrderByRateDescAllIgnoreCase(date11,date22,rate1,rate2,id,testName,testLevel,paging);
             }
             tests = pageTuts.getContent();
             Map<String, Object> response = new HashMap<>();
@@ -195,7 +253,7 @@ public class ManagerController {
             return new ResponseEntity<>(response, HttpStatus.OK);
 
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -278,14 +336,6 @@ public class ManagerController {
                         manager.setRoles("MANAGER");
                         sendConrfirmAccount(manager);
                         response.put("message", "Un email vous a été envoyé pour confirmer votre inscription");
-//                        response.put("FirstName", manager.getFirstName());
-//                        response.put("LastName", manager.getLastName());
-//                        response.put("Id", manager.getId());
-//                        response.put("Roles", manager.getRoles());
-//                        response.put("email", manager.getEmail());
-//                        response.put("Company", manager.getCompanyName());
-//                        response.put("Address", manager.getAddress());
-//                        response.put("phoneNumber", manager.getPhoneNumber());
                         return new ResponseEntity(response, HttpStatus.OK);
 
                     } else {
@@ -347,7 +397,8 @@ public class ManagerController {
             return new ResponseEntity(response,HttpStatus.OK);
         }
     }
-        @ApiOperation(value = "Register Confirmation")
+
+    @ApiOperation(value = "Register Confirmation")
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PostMapping(value = "/confirmResetPassword/{token}")
     public ResponseEntity<Map<String, Object>> confirmResetPassword(@PathVariable("token") String token, @RequestBody UpdatePassword  updatePassword ) {

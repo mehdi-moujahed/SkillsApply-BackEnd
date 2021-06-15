@@ -38,12 +38,15 @@ public class Test {
 
     private String managerID;
 
+    @NotNull
+    private boolean premiumPack;
+
     public Test() {
     }
 
     public Test(String id, @NotNull String name, String technologyLogo, @NotNull String description,
-                @NotNull float duration,  float score,  float level, @NotNull float rate,
-                ArrayList<String> questionsID,   Date createdAt,   String managerID) {
+                @NotNull float duration, float score, float level, @NotNull float rate, Date createdAt,
+                ArrayList<String> questionsID, String managerID, @NotNull boolean premiumPack) {
         this.id = id;
         this.name = name;
         this.technologyLogo = technologyLogo;
@@ -52,9 +55,18 @@ public class Test {
         this.score = score;
         this.level = level;
         this.rate = rate;
+        this.createdAt = createdAt;
         this.questionsID = questionsID;
-        this.createdAt=createdAt;
-        this.managerID=managerID;
+        this.managerID = managerID;
+        this.premiumPack = premiumPack;
+    }
+
+    public boolean isPremiumPack() {
+        return premiumPack;
+    }
+
+    public void setPremiumPack(boolean premiumPack) {
+        this.premiumPack = premiumPack;
     }
 
     public String getManagerID() {
