@@ -4,14 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.Column;
-import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
 
 @Document(collection = "users")
 public class Admin {

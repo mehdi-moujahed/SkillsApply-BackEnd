@@ -3,55 +3,24 @@ package com.reactit.Skillsapply.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
-import java.io.Console;
-import java.security.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
 import javax.persistence.Column;
-import javax.persistence.EntityListeners;
-import javax.persistence.PrePersist;
-import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
-//@EntityListeners(BeforeSaveListener.class)
 @Document(collection = "users")
 @Component
-//@EnableMongoAuditing
 public class User  {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Id
     private String id;
@@ -72,11 +41,15 @@ public class User  {
     @NotBlank(message = "Candidate Phone Number cannot be blank or null")
     private String phoneNumber;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE,pattern = "dd-MM-yyyy")
     private Date birthDate;
+
     private String img;
-    @NotBlank(message = "Candidate address cannot be blank or null")
+
     private String address;
+
+    @NotBlank(message = "manager ID cannot be blank or null")
+    private String managerID;
+
     private boolean emailVerified;
 
     @JsonProperty(access = Access.WRITE_ONLY)
@@ -84,17 +57,16 @@ public class User  {
 
     private String roles;
 
-    @NotBlank(message = "Candidate diploma must not be blank or null")
-    private String diploma;
+    private int diploma;
 
-    @DateTimeFormat
     private Date createdAt;
 
     public User() {
     }
 
-    public User(PasswordEncoder passwordEncoder, String id, String firstName, String lastName, String email, String phoneNumber, Date birthDate, String img, String address, boolean emailVerified, String password, String roles, String diploma, Date createdAt) {
-        this.passwordEncoder = passwordEncoder;
+    public User(String id, String firstName, String lastName, String email, String phoneNumber,
+                Date birthDate, String img, String address, String managerID, boolean emailVerified,
+                String password, String roles, int diploma, Date createdAt) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -103,6 +75,7 @@ public class User  {
         this.birthDate = birthDate;
         this.img = img;
         this.address = address;
+        this.managerID = managerID;
         this.emailVerified = emailVerified;
         this.password = password;
         this.roles = roles;
@@ -115,7 +88,6 @@ public class User  {
     }
 
     public void setId(String id) { this.id = id; }
-
 
     public String getFirstName() {
         return firstName;
@@ -149,11 +121,11 @@ public class User  {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getDiploma() {
+    public int getDiploma() {
         return diploma;
     }
 
-    public void setDiploma(String diploma) {
+    public void setDiploma(int diploma) {
         this.diploma = diploma;
     }
 
@@ -197,39 +169,9 @@ public class User  {
         this.createdAt = createdAt;
     }
 
-//    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//        return null;
-//    }
-
     public String getPassword() {
         return password;
     }
-
-//    @Override
-//    public String getUsername() {
-//        return null;
-//    }
-//
-//    @Override
-//    public boolean isAccountNonExpired() {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean isAccountNonLocked() {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean isCredentialsNonExpired() {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean isEnabled() {
-//        return false;
-//    }
 
     public void setPassword(String password) {
         this.password = password;
@@ -241,6 +183,14 @@ public class User  {
 
     public void setRoles(String roles) {
         this.roles = roles;
+    }
+
+    public String getManagerID() {
+        return managerID;
+    }
+
+    public void setManagerID(String managerID) {
+        this.managerID = managerID;
     }
 
     @Override

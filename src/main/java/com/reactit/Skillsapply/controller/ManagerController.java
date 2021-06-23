@@ -8,21 +8,16 @@ import com.reactit.Skillsapply.repository.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeComparator;
-import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +26,6 @@ import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -173,6 +167,66 @@ public class ManagerController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
+    @ApiOperation(value = "List All Professional Available Tests")
+    //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
+    @GetMapping("/getProfessionalAvailableTests")
+    public ResponseEntity<Map<String, Object>>getProfessionalAvailableTests(@RequestParam(defaultValue = "0") int page,
+                                                                            @RequestParam(defaultValue = "4") int size,
+                                                                            @RequestParam(defaultValue = "10") float testLevel
+    ){
+        try {
+            List<Test> tests = new ArrayList<Test>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Test> pageTuts;
+
+            pageTuts = testsRepository.findByPremiumPackIsAndLevel(true, testLevel,paging);
+
+            tests = pageTuts.getContent();
+            Map<String, Object> response = new HashMap<>();
+            response.put("availableTests", tests);
+            response.put("currentPage", pageTuts.getNumber());
+            response.put("totalItems", pageTuts.getTotalElements());
+            response.put("totalPages", pageTuts.getTotalPages());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @ApiOperation(value = "List All Recent & High Rated Available Tests")
+    //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
+    @GetMapping("/getRecentAvailableTests")
+    public ResponseEntity<Map<String, Object>>getRecentAvailableTests(@RequestParam(defaultValue = "0") int page,
+                                                                      @RequestParam(defaultValue = "4") int size,
+                                                                      @RequestParam boolean isRecent
+                                                                   ){
+        try {
+            List<Test> tests = new ArrayList<Test>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Test> pageTuts;
+
+            if(isRecent==true) {
+                pageTuts = testsRepository.findByPremiumPackIsOrderByCreatedAtDescAllIgnoreCase(true, paging);
+            }else {
+                pageTuts = testsRepository.findByPremiumPackIsOrderByRateDescAllIgnoreCase(true, paging);
+            }
+            tests = pageTuts.getContent();
+            Map<String, Object> response = new HashMap<>();
+            response.put("availableTests", tests);
+            response.put("currentPage", pageTuts.getNumber());
+            response.put("totalItems", pageTuts.getTotalElements());
+            response.put("totalPages", pageTuts.getTotalPages());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
     @ApiOperation(value = "List All Available Tests")
     //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
     @GetMapping("/getAvailableTests")
@@ -183,8 +237,8 @@ public class ManagerController {
                                                               @RequestParam(defaultValue = "10") float testLevel,
                                                               @RequestParam(defaultValue = "2020-01-01") String date1,
                                                               @RequestParam(defaultValue = "2121-01-26") String date2,
-                                                              @RequestParam(defaultValue = "0")int rate1,
-                                                              @RequestParam(defaultValue = "6")int rate2
+                                                              @RequestParam(defaultValue = "-1")float rate1,
+                                                              @RequestParam(defaultValue = "6")float rate2
                                                          )
     {
         try {
@@ -227,8 +281,8 @@ public class ManagerController {
                                                               @RequestParam(defaultValue = "10") float testLevel,
                                                               @RequestParam(defaultValue = "2020-01-01") String date1,
                                                               @RequestParam(defaultValue = "2121-01-26") String date2,
-                                                              @RequestParam(defaultValue = "0")int rate1,
-                                                              @RequestParam(defaultValue = "6")int rate2
+                                                              @RequestParam(defaultValue = "0")float rate1,
+                                                              @RequestParam(defaultValue = "6")float rate2
                                                               ) {
         try {
             List<Test> tests = new ArrayList<Test>();
@@ -250,6 +304,7 @@ public class ManagerController {
             response.put("currentPage", pageTuts.getNumber());
             response.put("totalItems", pageTuts.getTotalElements());
             response.put("totalPages", pageTuts.getTotalPages());
+            response.put("allTestsCreated",testsRepository.findByManagerID(id).stream().count());
             return new ResponseEntity<>(response, HttpStatus.OK);
 
         } catch (Exception e) {
@@ -288,6 +343,8 @@ public class ManagerController {
     }
 
 
+
+
     @ApiOperation(value = "Delete Question By ID")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping(value = "/deleteQuestion/{id}")
@@ -297,6 +354,21 @@ public class ManagerController {
             questionsRepository.deleteById(id);
             HashMap<String, String> resp = new HashMap<>();
             return new ResponseEntity<>("Question Deleted Successfully ", HttpStatus.OK);
+        } else
+            return new ResponseEntity("Question Not Found !", HttpStatus.NOT_FOUND);
+    }
+
+    @ApiOperation(value = "Delete Test By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping(value = "/deleteTest/{id}")
+    public ResponseEntity deleteTestById(@PathVariable String id) throws Exception {
+        Optional<Test> test = testsRepository.findById(id);
+        HashMap<String, String> response = new HashMap<>();
+        if (test.isPresent()) {
+            testsRepository.deleteById(id);
+            response.put("test name",test.get().getName());
+            response.put("test id",test.get().getId());
+            return new ResponseEntity<>(response,  HttpStatus.OK);
         } else
             return new ResponseEntity("Question Not Found !", HttpStatus.NOT_FOUND);
     }
@@ -462,7 +534,7 @@ public class ManagerController {
         String confirmationUrl = websiteBaseUrl+ "/confirmResetPassword/" + token;
         Manager managerAdded = managerRepository.save(manager);
         String mailMsg="<h1>Réinitialisation mot de passe</h1> " +
-                "<p>Veuillez cliquer sur le lien ci-dessous pour rénitialiser votre mot de passe <b>SkillsApply</b></p> " +
+                "<p>Veuillez cliquer sur le lien ci-dessous pour rénitialiser votre mot de passe de votre compte <b>SkillsApply</b></p> " +
                 "<a href='"+confirmationUrl+"'>Rénitialiser mot de passe</a>"+
                 "<br> <p>Skills Apply team support</p>" +
                 " <img src='cid:myLogo'>";

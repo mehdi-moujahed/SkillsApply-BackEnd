@@ -1,8 +1,5 @@
 package com.reactit.Skillsapply.dto;
 
-import com.reactit.Skillsapply.model.Questions;
-
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 

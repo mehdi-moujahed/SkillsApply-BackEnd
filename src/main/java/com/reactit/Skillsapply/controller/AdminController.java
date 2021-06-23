@@ -3,7 +3,6 @@ package com.reactit.Skillsapply.controller;
 import com.reactit.Skillsapply.model.Admin;
 import com.reactit.Skillsapply.model.Manager;
 import com.reactit.Skillsapply.model.Membership;
-import com.reactit.Skillsapply.model.User;
 import com.reactit.Skillsapply.repository.AdminRepository;
 import com.reactit.Skillsapply.repository.ManagerRepository;
 import com.reactit.Skillsapply.repository.MembershipRepository;
@@ -12,7 +11,6 @@ import com.reactit.Skillsapply.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +24,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -203,7 +200,6 @@ public class AdminController {
                         response.put("message", "Password must contain at least one : Capital letter Number and Special Characters");
                         return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
                     }
-
 
                     else if (phoneNumberLengthCheck == false) {
                         response.put("message", "phoneNumber must have 8 numbers ");

@@ -4,12 +4,9 @@ import com.reactit.Skillsapply.model.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Optional;
 
 public interface TestsRepository extends MongoRepository<Test,String> {
 
@@ -23,6 +20,11 @@ public interface TestsRepository extends MongoRepository<Test,String> {
 
     Page<Test> findByCreatedAtBetweenAndRateBetweenAndPremiumPackIsAndNameContainingAndLevelOrderByRateDescAllIgnoreCase(Date date1, Date date2,float rate1, float rate2,boolean premuimPack, String name,float level ,Pageable pageable);
 
+    Page<Test> findByPremiumPackIsOrderByCreatedAtDescAllIgnoreCase(boolean premiumPack, Pageable pageable);
+
+    Page<Test> findByPremiumPackIsOrderByRateDescAllIgnoreCase(boolean premiumPack, Pageable pageable);
+
+    Page<Test> findByPremiumPackIsAndLevel(boolean premiumPack, float level,Pageable pageable);
 
 
 

@@ -2,6 +2,7 @@ package com.reactit.Skillsapply.controller;
 
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.dto.UpdateUserProfile;
+import com.reactit.Skillsapply.model.Test;
 import com.reactit.Skillsapply.model.User;
 import com.reactit.Skillsapply.repository.UserRepository;
 import com.reactit.Skillsapply.service.FilesStorageService;
@@ -11,6 +12,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,9 +27,9 @@ import javax.validation.ConstraintViolationException;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -189,6 +193,102 @@ public class UserController {
 
         } catch (ConstraintViolationException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return null;
+    }
+
+    @ApiOperation(value = "Delete Candidate")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
+    @DeleteMapping(value = "/deleteCandidate/{id}")
+    public ResponseEntity<Void> deleteCandidateByID(@PathVariable("id") String id ){
+        Map<String, Object> response = new HashMap<>();
+        Optional<User> candidate = userRepository.findById(id);
+        if(candidate.isPresent()) {
+            userRepository.deleteById(id);
+            response.put("message","candidat supprimé avec succés");
+            return new ResponseEntity(response,HttpStatus.OK);
+        } else {
+            response.put("message","Candidat Inexistant !");
+            return new ResponseEntity(response,HttpStatus.NO_CONTENT);
+        }
+    }
+
+    @ApiOperation(value = "Get Candidates by managerID")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
+    @GetMapping(value = "/getAllCandidates/{id}")
+    public ResponseEntity<Void> getAllCandidates(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "5") int size,
+                                                 @PathVariable("id") String id,
+                                                 @RequestParam(defaultValue = "10") int diploma,
+                                                 @RequestParam(defaultValue ="") String email,
+                                                 @RequestParam(defaultValue = "2020-01-01") String date1,
+                                                 @RequestParam(defaultValue = "2121-01-26") String date2) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+
+                List<User> candidates = new ArrayList<User>();
+                Pageable paging = PageRequest.of(page, size);
+
+                Page<User> pageTuts;
+
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+
+                Date date11 = formatter.parse(date1);
+                Date date22 = formatter.parse(date2);
+
+                if(diploma==50){
+                    pageTuts = userRepository.findByManagerIDAndCreatedAtBetweenAndRolesAndEmailContainingAllIgnoreCase(id,date11,date22,"USER",email,paging);
+                } else
+                pageTuts = userRepository.findByManagerIDAndCreatedAtBetweenAndRolesAndEmailContainingAndDiplomaAllIgnoreCase(id,date11,date22,"USER",email,diploma,paging);
+                candidates = pageTuts.getContent();
+                response.put("candidates",candidates);
+                response.put("currentPage", pageTuts.getNumber());
+                response.put("totalItems", pageTuts.getTotalElements());
+                response.put("totalPages", pageTuts.getTotalPages());
+                return new ResponseEntity(response,HttpStatus.OK);
+
+        } catch (Exception exception) {
+            response.put("error",exception);
+            return new ResponseEntity(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @ApiOperation(value = "Candidate Registration")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
+    @PostMapping(value = "/candidateSignup")
+    public ResponseEntity<Void> candidateRegistration(@RequestBody User user) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            if (userRepository.findByEmail(user.getEmail()) == null) {
+                    Pattern pattern = Pattern.compile("^[0-9]{8}$");
+                    Matcher matcher = pattern.matcher(user.getPhoneNumber());
+                    boolean phoneNumberLengthCheck = matcher.find();
+
+                     if (phoneNumberLengthCheck == false)
+                        return new ResponseEntity("phoneNumber must have 8 numbers ", HttpStatus.BAD_REQUEST);
+                    else if (phoneNumberLengthCheck) {
+
+                        user.setFirstName(user.getFirstName());
+                        user.setLastName(user.getLastName());
+                        user.setBirthDate(user.getBirthDate());
+                        user.setDiploma(user.getDiploma());
+                        user.setPhoneNumber(user.getPhoneNumber());
+                        user.setCreatedAt(new Date());
+                        user.setRoles("USER");
+                        user.setManagerID("60a79878a0784e4240d4a619");
+                        userRepository.save(user);
+                        response.put("message","Candidat ajouté avec succés");
+                        return new ResponseEntity(response,HttpStatus.OK);
+                     }
+            } else {
+                response.put("message","email déja utilisé !");
+                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+            }
+
+        } catch (ConstraintViolationException e) {
+            response.put("error",e.getMessage());
+            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
         }
         return null;
     }

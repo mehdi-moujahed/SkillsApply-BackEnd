@@ -1,7 +1,6 @@
 package com.reactit.Skillsapply.service;
 
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
