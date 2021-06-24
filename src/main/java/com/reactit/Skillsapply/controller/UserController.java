@@ -2,6 +2,7 @@ package com.reactit.Skillsapply.controller;
 
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.dto.UpdateUserProfile;
+import com.reactit.Skillsapply.model.Manager;
 import com.reactit.Skillsapply.model.Test;
 import com.reactit.Skillsapply.model.User;
 import com.reactit.Skillsapply.repository.UserRepository;
@@ -58,9 +59,6 @@ public class UserController {
     FilesStorageServiceImpl filesStorageServiceImpl;
 
     public static String uploadDirectory = System.getProperty("user.dir")+"/photos";
-
-
-
 
 
 
@@ -258,7 +256,6 @@ public class UserController {
     @PostMapping(value = "/candidateSignup")
     public ResponseEntity<Void> candidateRegistration(@RequestBody User user) {
         Map<String, Object> response = new HashMap<>();
-
         try {
             if (userRepository.findByEmail(user.getEmail()) == null) {
                     Pattern pattern = Pattern.compile("^[0-9]{8}$");
@@ -291,5 +288,27 @@ public class UserController {
             return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
         }
         return null;
+    }
+    @ApiOperation(value = "Updating Candidate Profile")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping(value = "/updateCandidate/{id}")
+    public ResponseEntity<Void> updateCandidate(@RequestBody User user, @PathVariable String id){
+        Map<String, Object> response = new HashMap<>();
+        Optional<User> dbUser = userRepository.findById(id);
+        if(dbUser.isPresent()){
+            User userToEdit = dbUser.get();
+            userToEdit.setFirstName(user.getFirstName());
+            userToEdit.setLastName(user.getLastName());
+            userToEdit.setEmail(user.getEmail());
+            userToEdit.setPhoneNumber(user.getPhoneNumber());
+            userToEdit.setBirthDate(user.getBirthDate());
+            userToEdit.setDiploma(user.getDiploma());
+            userRepository.save(userToEdit);
+            response.put("message","Candidat modifié avec succés");
+            return new ResponseEntity(response,HttpStatus.OK);
+        } else {
+            response.put("message", "erreur lors du modification du candidat");
+            return new ResponseEntity(response, HttpStatus.NOT_FOUND);
+        }
     }
 }
