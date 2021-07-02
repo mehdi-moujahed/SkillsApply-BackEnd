@@ -5,6 +5,7 @@ import com.reactit.Skillsapply.dto.TestDTO;
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.model.*;
 import com.reactit.Skillsapply.repository.*;
+import com.reactit.Skillsapply.service.ManagerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.joda.time.DateTime;
@@ -57,6 +58,9 @@ public class ManagerController {
     PasswordEncoder passwordEncoder;
 
     @Autowired
+    ManagerService managerService;
+
+    @Autowired
     private JavaMailSender javaMailSender;
 
     @Value("${SkillsApply.app.websiteBaseUrl}")
@@ -68,6 +72,18 @@ public class ManagerController {
     @GetMapping("/getAllCandidates")
     public List<User> getAllCandidates() {
         return userRepository.findByRoles("USER");
+    }
+
+
+    @ApiOperation(value = "Get Candidate By Id")
+//    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
+    @GetMapping("/getCandidate/{id}")
+    public ResponseEntity<Map<String, Object>> getCandidateById(@PathVariable("id") String id) {
+        Optional<User> user = userRepository.findByIdAndRoles(id,"USER");
+        if(user.isPresent()) {
+            return new ResponseEntity(user,HttpStatus.OK);
+        } else
+            return new ResponseEntity("Candidat Inexistant",HttpStatus.NOT_FOUND);
     }
 
 
@@ -375,6 +391,46 @@ public class ManagerController {
 
 
 
+    @ApiOperation(value = "Get Test By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getTestManager/{id}")
+    public ResponseEntity<Map<String, Object>> getTestByIdManager(@PathVariable String id) throws Exception {
+
+       List<com.reactit.Skillsapply.dto.TestsDTO.Test> testAggregation
+               = managerService.getAggregationTestById(id);
+
+        return new ResponseEntity(testAggregation, HttpStatus.OK);
+
+    }
+
+    @ApiOperation(value = "Get Question By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getQuestion/{id}")
+    public ResponseEntity<Map<String, Object>> getQuestionById(@PathVariable String id) throws Exception {
+
+        List<com.reactit.Skillsapply.dto.TestsDTO.Question> testAggregation
+                = managerService.getAggregationQuestionById(id);
+
+        return new ResponseEntity(testAggregation, HttpStatus.OK);
+
+    }
+
+    @ApiOperation(value = "Get Test By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getTestExam/{id}")
+    public ResponseEntity<Map<String, Object>> getTestById(@PathVariable String id) throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Test> test = testsRepository.findById(id);
+        if(test.isPresent()) {
+            return new ResponseEntity(test,HttpStatus.OK);
+        } else
+        {
+            response.put("message","Test Inexistant !");
+            return new ResponseEntity(response, HttpStatus.NO_CONTENT);
+        }
+
+    }
+
     @ApiOperation(value = "Adding new RH Manager")
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PostMapping(value = "/signup")
@@ -442,6 +498,29 @@ public class ManagerController {
         javaMailSender.send(msg) ;
     }
 
+
+    @ApiOperation(value = "Sending Mail for passing test")
+    @PostMapping(value = "/sendTestMail/{email}")
+    public ResponseEntity<Map<String, Object>> sendPassingTestMail(@PathVariable("email") String email,
+                                                                   @RequestParam String testID )throws MessagingException,IOException {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Test> test = testsRepository.findById(testID);
+        if(test.isPresent()) {
+            User user = userRepository.findByEmailAndRoles(email,"USER");
+            String confirmationUrl = websiteBaseUrl+ "/passingTest?testID="+test.get().getId()+"&candidateID="+user.getId();
+            String mailMsg="<h1>Invitation pour le passage du test : "+test.get().getName()+" </h1> " +
+                    "<p> Salut <b>"+user.getFirstName()+ "</b>, Veuillez cliquer sur le lien ci-dessous pour commencer votre test</p> " +
+                    "<a href='"+confirmationUrl+"'>Commencer le test</a>"+
+                    "<br> <p>Skills Apply team support</p>" +
+                    " <img src='cid:myLogo'>";
+            sendMail(email,"Invitation passage test",mailMsg);
+            response.put("message","email envoyé avec succés");
+            return new ResponseEntity(response,HttpStatus.OK);
+        } else {
+            response.put("message","Test Inexistant !");
+            return new ResponseEntity(response,HttpStatus.NOT_FOUND);
+        }
+    }
 
     @ApiOperation(value = " Token Verification ")
     @PostMapping(value = "/verifToken/{token}")
@@ -535,7 +614,7 @@ public class ManagerController {
         Manager managerAdded = managerRepository.save(manager);
         String mailMsg="<h1>Réinitialisation mot de passe</h1> " +
                 "<p>Veuillez cliquer sur le lien ci-dessous pour rénitialiser votre mot de passe de votre compte <b>SkillsApply</b></p> " +
-                "<a href='"+confirmationUrl+"'>Rénitialiser mot de passe</a>"+
+                "<a href='"+confirmationUrl+"'>Réinitialiser mot de passe</a>"+
                 "<br> <p>Skills Apply team support</p>" +
                 " <img src='cid:myLogo'>";
         sendMail(manager.getEmail(),"Réinitialisation mot de passe",mailMsg);

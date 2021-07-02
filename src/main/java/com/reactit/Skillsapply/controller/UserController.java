@@ -141,8 +141,39 @@ public class UserController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
     return new ResponseEntity("Password Updated Successfully",HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Candidate update password")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
+    @PatchMapping(value = "/candidateUpdatePassword/{id}")
+    public ResponseEntity<Map<String,Object>> updateCandidatePassword(@PathVariable("id") String id,
+                                                        @RequestBody UpdatePassword updatePassword) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<User> user = userRepository.findByIdAndRoles(id,"USER");
+        if(user.isPresent()) {
+            if(updatePassword.getNewPassword().equals(updatePassword.getConfirmNewPassword())){
+                User editUser = user.get();
+                Pattern p = Pattern.compile("[^A-Za-z0-9]");
+                Matcher m = p.matcher(updatePassword.getNewPassword());
+                boolean passwordLengthCheck = m.find();
+                if(passwordLengthCheck){
+                    editUser.setPassword(passwordEncoder.encode(updatePassword.getNewPassword()));
+                    userRepository.save(editUser);
+                    response.put("message","Inscription Terminé avec succés");
+                    return new ResponseEntity(response, HttpStatus.OK);
+                } else {
+                    response.put("message","Le Mot de passe doit contenir 8 caractéres et au moins : une lettre majiscule, une lettre miniscule et un nombre ");
+                    return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                response.put("message","Les deux mots de passe ne sont pas identiques !");
+                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+            }
+        } else
+        return new ResponseEntity("Candidat Inexistant", HttpStatus.NOT_FOUND);
     }
 
 
@@ -289,6 +320,7 @@ public class UserController {
         }
         return null;
     }
+
     @ApiOperation(value = "Updating Candidate Profile")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping(value = "/updateCandidate/{id}")

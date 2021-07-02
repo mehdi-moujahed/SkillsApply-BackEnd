@@ -14,6 +14,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     User findByEmail(String email);
 
+    User findByEmailAndRoles(String email,String roles);
+
+    Optional <User> findByIdAndRoles(String id, String roles);
+
     List <User> findByRoles (String roles);
 
     Page<User> findByManagerIDAndCreatedAtBetweenAndRolesAndEmailContainingAndDiplomaAllIgnoreCase(String managerID,  Date date1, Date date2,String roles, String email, int diploma  ,Pageable pageable);
