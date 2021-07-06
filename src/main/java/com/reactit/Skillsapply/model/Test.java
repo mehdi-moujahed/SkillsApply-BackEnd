@@ -40,12 +40,16 @@ public class Test {
     @NotNull
     private boolean premiumPack;
 
+    private int nbrOfRate;
+
+    private float totalRates;
+
     public Test() {
     }
 
     public Test(String id, @NotNull String name, String technologyLogo, @NotNull String description,
                 @NotNull float duration, float score, float level, @NotNull float rate, Date createdAt,
-                ArrayList<String> questionsID, String managerID, @NotNull boolean premiumPack) {
+                ArrayList<String> questionsID, String managerID, @NotNull boolean premiumPack, int nbrOfRate, float totalRates) {
         this.id = id;
         this.name = name;
         this.technologyLogo = technologyLogo;
@@ -58,6 +62,24 @@ public class Test {
         this.questionsID = questionsID;
         this.managerID = managerID;
         this.premiumPack = premiumPack;
+        this.nbrOfRate = nbrOfRate;
+        this.totalRates = totalRates;
+    }
+
+    public float getTotalRates() {
+        return totalRates;
+    }
+
+    public void setTotalRates(float totalRates) {
+        this.totalRates = totalRates;
+    }
+
+    public int getNbrOfRate() {
+        return nbrOfRate;
+    }
+
+    public void setNbrOfRate(int nbrOfRate) {
+        this.nbrOfRate = nbrOfRate;
     }
 
     public boolean isPremiumPack() {
