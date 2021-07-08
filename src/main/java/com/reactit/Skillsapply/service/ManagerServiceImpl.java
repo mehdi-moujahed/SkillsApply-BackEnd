@@ -43,7 +43,7 @@ public class ManagerServiceImpl implements ManagerService{
                 match(
                         Criteria.where("_id").is(idTest)
                 ),
-                // account beneficiaries
+                // get questions for the specific test
                 l -> new Document("$lookup",
                         new Document("from", mongoTemplate.getCollectionName(Questions.class))
                                 .append("let", new Document("questionId",

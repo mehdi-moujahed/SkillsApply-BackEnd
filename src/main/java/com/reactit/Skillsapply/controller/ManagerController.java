@@ -72,6 +72,7 @@ public class ManagerController {
     private String websiteBaseUrl;
 
 
+
     @ApiOperation(value = "List All Candidates")
 //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('Manager')")
     @GetMapping("/getAllCandidates")
@@ -147,15 +148,17 @@ public class ManagerController {
 
         testDTO.getQuestions().forEach((n)->{
             ArrayList<String> answersID = new ArrayList<>();
-            n.getAnswers().forEach((answer)->{
-                Answers answers = new Answers();
-                answers.setAnswer(answer.getAnswer());
-                answers.setStatus(answer.isStatus());
-                Answers addedAnswer = answersRepository.save(answers);
-                answersID.add(addedAnswer.getId());
-                System.out.println("answer :" + answer.getAnswer()
-                        + " Status : " + answer.isStatus());
-            });
+
+                n.getAnswers().forEach((answer)->{
+                    Answers answers = new Answers();
+                    answers.setAnswer(answer.getAnswer());
+                    answers.setStatus(answer.isStatus());
+                    Answers addedAnswer = answersRepository.save(answers);
+                    answersID.add(addedAnswer.getId());
+                    System.out.println("answer :" + answer.getAnswer()
+                            + " Status : " + answer.isStatus());
+                });
+
             Questions questions1 = new Questions();
             questions1.setQuestion(n.getQuestion());
             questions1.setAnswersID(answersID);
@@ -322,6 +325,7 @@ public class ManagerController {
             return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+
     }
 
 
@@ -433,8 +437,28 @@ public class ManagerController {
         dbResult.setUserId(result.getUserId());
         dbResult.setDuration(result.getDuration());
         dbResult.setResult(result.getResult());
+        dbResult.setCreatedAt(new Date());
         resultRepository.save(dbResult);
         return new ResponseEntity(dbResult,HttpStatus.OK);
+
+    }
+
+    @ApiOperation(value = "get test passed")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getTestPassed/{managerId}")
+    public ResponseEntity getTestPassed(@PathVariable("managerId") String managerId) throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        List <Result> result = resultRepository.findByManagerId(managerId);
+
+        result.forEach((result1 -> {
+            Optional <Test> test = testsRepository.findById(result1.getTestId());
+            Optional<User> candidate = userRepository.findById(result1.getUserId());
+            response.put("test",test);
+            response.put("candidate",candidate);
+        }));
+        response.put("size",result.size());
+        response.put("resultat",result);
+        return new ResponseEntity(response,HttpStatus.OK);
 
     }
 

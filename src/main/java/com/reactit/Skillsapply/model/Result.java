@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 @Document(collection = "Results")
 public class Result {
@@ -23,11 +24,16 @@ public class Result {
 
     private float duration;
 
+    private Date createdAt;
+
+
+
     public Result() {
     }
 
     public Result(String id, String managerId, String testId, String userId,
-                  ArrayList<ResultAnswers> result, float score, float duration) {
+                  ArrayList<ResultAnswers> result, float score, float duration,
+                  Date createdAt) {
         this.id = id;
         this.managerId = managerId;
         this.testId = testId;
@@ -35,6 +41,7 @@ public class Result {
         this.result = result;
         this.score = score;
         this.duration = duration;
+        this.createdAt = createdAt;
     }
 
     public String getId() {
@@ -73,6 +80,14 @@ public class Result {
         return result;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public void setResult(ArrayList<ResultAnswers> result) {
         this.result = result;
     }
@@ -92,4 +107,5 @@ public class Result {
     public void setDuration(float duration) {
         this.duration = duration;
     }
+
 }
