@@ -10,7 +10,6 @@ public class QuestionDTO {
     @NotNull
     private String question;
 
-    @NotNull
     private ArrayList<Answers> answers;
 
     @NotNull
@@ -25,18 +24,22 @@ public class QuestionDTO {
     @NotNull
     private float points;
 
+    private String uniqueAnswer;
+
 
     public QuestionDTO() {
     }
 
-    public QuestionDTO(@NotNull String question, @NotNull ArrayList<Answers> answers, @NotNull String questionType,
-                       @NotNull float duration, @NotNull float level, @NotNull float points) {
+    public QuestionDTO(@NotNull String question,  ArrayList<Answers> answers, @NotNull String questionType,
+                       @NotNull float duration, @NotNull float level, @NotNull float points,
+                       String uniqueAnswer) {
         this.question = question;
         this.answers = answers;
         this.questionType = questionType;
         this.duration = duration;
         this.level = level;
         this.points = points;
+        this.uniqueAnswer = uniqueAnswer;
     }
 
     public String getQuestion() {
@@ -85,5 +88,13 @@ public class QuestionDTO {
 
     public void setPoints(float points) {
         this.points = points;
+    }
+
+    public String getUniqueAnswer() {
+        return uniqueAnswer;
+    }
+
+    public void setUniqueAnswer(String uniqueAnswer) {
+        this.uniqueAnswer = uniqueAnswer;
     }
 }

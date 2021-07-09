@@ -26,6 +26,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,6 +54,9 @@ public class ManagerController {
     AnswersRepository answersRepository;
 
     @Autowired
+    ResultRepository resultRepository;
+
+    @Autowired
     TestsRepository testsRepository;
 
     @Autowired
@@ -65,6 +70,7 @@ public class ManagerController {
 
     @Value("${SkillsApply.app.websiteBaseUrl}")
     private String websiteBaseUrl;
+
 
 
     @ApiOperation(value = "List All Candidates")
@@ -124,6 +130,8 @@ public class ManagerController {
     }
 
 
+
+
     @ApiOperation(value = "Adding new Test")
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PostMapping(value = "/addTest")
@@ -140,15 +148,17 @@ public class ManagerController {
 
         testDTO.getQuestions().forEach((n)->{
             ArrayList<String> answersID = new ArrayList<>();
-            n.getAnswers().forEach((answer)->{
-                Answers answers = new Answers();
-                answers.setAnswer(answer.getAnswer());
-                answers.setStatus(answer.isStatus());
-                Answers addedAnswer = answersRepository.save(answers);
-                answersID.add(addedAnswer.getId());
-                System.out.println("answer :" + answer.getAnswer()
-                        + " Status : " + answer.isStatus());
-            });
+
+                n.getAnswers().forEach((answer)->{
+                    Answers answers = new Answers();
+                    answers.setAnswer(answer.getAnswer());
+                    answers.setStatus(answer.isStatus());
+                    Answers addedAnswer = answersRepository.save(answers);
+                    answersID.add(addedAnswer.getId());
+                    System.out.println("answer :" + answer.getAnswer()
+                            + " Status : " + answer.isStatus());
+                });
+
             Questions questions1 = new Questions();
             questions1.setQuestion(n.getQuestion());
             questions1.setAnswersID(answersID);
@@ -177,11 +187,43 @@ public class ManagerController {
         test.setManagerID("60a79878a0784e4240d4a619");
         test.setCreatedAt(new Date());
         test.setPremiumPack(false);
+        test.setNbrOfRate(0);
 
         testsRepository.save(test);
         response.put("message","Test Added Succesfully");
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
+
+
+    @ApiOperation(value = "Delete Created Test")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @DeleteMapping(value = "/deleteTestById/{id}")
+    public ResponseEntity<Map<String, Object>> deleteTest(@PathVariable("id") String id) {
+       try {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Test> test = testsRepository.findById(id);
+        if(test.isPresent()) {
+            test.get().getQuestionsID().forEach((questionID)->{
+                 Optional<Questions> questions = questionsRepository.findById(questionID);
+                 questions.get().getAnswersID().forEach((answer)->{
+                     answersRepository.deleteById(answer);
+                 });
+                 questionsRepository.deleteById(questionID);
+            });
+            testsRepository.deleteById(id);
+            response.put("message","test supprimé avec succés");
+            return new ResponseEntity(response,HttpStatus.OK);
+            } else
+        {
+            response.put("message","test introuvable !");
+            return new ResponseEntity(response,HttpStatus.NOT_FOUND);
+        }
+
+    } catch (Exception e) {
+        return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    }
+
 
     @ApiOperation(value = "List All Professional Available Tests")
     //    @PreAuthorize("hasAuthority('ADMIN') or hasAnyAuthority('MANAGER')")
@@ -283,6 +325,7 @@ public class ManagerController {
             return new ResponseEntity(e,HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+
     }
 
 
@@ -359,7 +402,65 @@ public class ManagerController {
     }
 
 
+    @ApiOperation(value = "Calcul Test Rating")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PatchMapping(value = "/rateTest/{id}/{rate}")
+    public ResponseEntity<Map<String, Object>> calculTestRate(@PathVariable("id") String id,
+                                                              @PathVariable("rate") float rate){
+        Map<String, Object> response = new HashMap<>();
+     ;
+        Optional<Test> test = testsRepository.findById(id);
+        if(test.isPresent()) {
+            Test testToEdit = test.get();
+            testToEdit.setTotalRates(test.get().getTotalRates() + rate);
+            testToEdit.setNbrOfRate(test.get().getNbrOfRate()+1);
+            testToEdit.setRate( Math.round( testToEdit.getTotalRates()/testToEdit.getNbrOfRate()));
+            testsRepository.save(testToEdit);
+            response.put("message","test modifé avec succés");
+            return new ResponseEntity(response,HttpStatus.OK);
 
+        }
+        return new ResponseEntity("Test introuvable",HttpStatus.NOT_FOUND);
+    }
+
+    @ApiOperation(value = "Result test")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping(value = "/addResultTest")
+    public ResponseEntity addResultTest(@RequestBody Result result) throws Exception {
+        HashMap<String, String> response = new HashMap<>();
+
+        Result dbResult = new Result();
+
+        dbResult.setScore(result.getScore());
+        dbResult.setManagerId(result.getManagerId());
+        dbResult.setTestId(result.getTestId());
+        dbResult.setUserId(result.getUserId());
+        dbResult.setDuration(result.getDuration());
+        dbResult.setResult(result.getResult());
+        dbResult.setCreatedAt(new Date());
+        resultRepository.save(dbResult);
+        return new ResponseEntity(dbResult,HttpStatus.OK);
+
+    }
+
+    @ApiOperation(value = "get test passed")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getTestPassed/{managerId}")
+    public ResponseEntity getTestPassed(@PathVariable("managerId") String managerId) throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        List <Result> result = resultRepository.findByManagerId(managerId);
+
+        result.forEach((result1 -> {
+            Optional <Test> test = testsRepository.findById(result1.getTestId());
+            Optional<User> candidate = userRepository.findById(result1.getUserId());
+            response.put("test",test);
+            response.put("candidate",candidate);
+        }));
+        response.put("size",result.size());
+        response.put("resultat",result);
+        return new ResponseEntity(response,HttpStatus.OK);
+
+    }
 
     @ApiOperation(value = "Delete Question By ID")
 //    @PreAuthorize("hasAuthority('ADMIN')")
@@ -519,7 +620,7 @@ public class ManagerController {
         Optional<Test> test = testsRepository.findById(testID);
         if(test.isPresent()) {
             User user = userRepository.findByEmailAndRoles(email,"USER");
-            String confirmationUrl = websiteBaseUrl+ "/passingTest?testID="+test.get().getId()+"&candidateID="+user.getId();
+            String confirmationUrl = websiteBaseUrl+ "/passingTest?testID="+test.get().getId()+"&candidateID="+user.getId()+"&managerID="+test.get().getManagerID();
             String mailMsg="<h1>Invitation pour le passage du test : "+test.get().getName()+" </h1> " +
                     "<p> Salut <b>"+user.getFirstName()+ "</b>, Veuillez cliquer sur le lien ci-dessous pour commencer votre test</p> " +
                     "<a href='"+confirmationUrl+"'>Commencer le test</a>"+
