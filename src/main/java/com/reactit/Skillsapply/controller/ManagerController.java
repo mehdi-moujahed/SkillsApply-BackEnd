@@ -1,5 +1,6 @@
 package com.reactit.Skillsapply.controller;
 
+import com.google.common.io.Files;
 import com.reactit.Skillsapply.dto.QuestionDTO;
 import com.reactit.Skillsapply.dto.TestDTO;
 import com.reactit.Skillsapply.dto.UpdatePassword;
@@ -24,8 +25,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.script.ScriptException;
 import javax.validation.ConstraintViolationException;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -33,6 +35,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.mongodb.internal.connection.tlschannel.util.Util.assertTrue;
 
 
 @RequestMapping("/manager")
@@ -130,6 +134,43 @@ public class ManagerController {
     }
 
 
+    @ApiOperation(value = "Adding new algorithms excercice")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping(value = "/addAlgoQuestion/{code}/{idQuestion}")
+    public ResponseEntity<Void> addAlgoQuestion(@PathVariable("code") String code,
+                                                @PathVariable("idQuestion") String idQuestion) {
+
+        try {
+            String pathFile  = "E:\\boudj\\Documents\\Algoquestions\\";
+            File file = new File(pathFile+idQuestion+".js");
+            FileOutputStream is = new FileOutputStream(file);
+            OutputStreamWriter osw = new OutputStreamWriter(is);
+            Writer w = new BufferedWriter(osw);
+            w.write(code);
+            w.close();
+            File dir = new File(pathFile);
+            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/C", "node " +idQuestion+".js");
+            pb.directory(dir);
+            Process process = pb.start();
+            StringBuilder output = new StringBuilder();
+            BufferedReader reader
+                    = new BufferedReader(new InputStreamReader(
+                    process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            int exitVal = process.waitFor();
+            if (exitVal == 0) {
+                System.out.println("**************************** The Output is ******************************");
+                System.out.println(output);
+            }
+            return new ResponseEntity("File created successfully",HttpStatus.OK);
+
+        } catch (IOException | InterruptedException exception) {
+            return new ResponseEntity(exception,HttpStatus.BAD_REQUEST);
+        }
+    }
 
 
     @ApiOperation(value = "Adding new Test")

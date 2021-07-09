@@ -15,15 +15,26 @@ public class ResultAnswers {
 
     private String answer;
 
+    private String questionType;
+
 
     public ResultAnswers() {
     }
 
-    public ResultAnswers(String id, String questionId, ArrayList<String> answersId, String answer) {
+    public ResultAnswers(String id, String questionId, ArrayList<String> answersId, String answer, String questionType) {
         this.id = id;
         this.questionId = questionId;
         this.answersId = answersId;
         this.answer = answer;
+        this.questionType = questionType;
+    }
+
+    public String getQuestionType() {
+        return questionType;
+    }
+
+    public void setQuestionType(String questionType) {
+        this.questionType = questionType;
     }
 
     public String getAnswer() {

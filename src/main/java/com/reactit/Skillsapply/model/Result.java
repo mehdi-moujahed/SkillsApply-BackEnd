@@ -31,9 +31,7 @@ public class Result {
     public Result() {
     }
 
-    public Result(String id, String managerId, String testId, String userId,
-                  ArrayList<ResultAnswers> result, float score, float duration,
-                  Date createdAt) {
+    public Result(String id, String managerId, String testId, String userId, ArrayList<ResultAnswers> result, float score, float duration, Date createdAt) {
         this.id = id;
         this.managerId = managerId;
         this.testId = testId;
