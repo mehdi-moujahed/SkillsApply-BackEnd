@@ -396,7 +396,7 @@ public class ManagerController {
     @GetMapping(value = "/getTestManager/{id}")
     public ResponseEntity<Map<String, Object>> getTestByIdManager(@PathVariable String id) throws Exception {
 
-       List<com.reactit.Skillsapply.dto.TestsDTO.Test> testAggregation
+       List<com.reactit.Skillsapply.dto.TestsDTO.TestManager> testAggregation
                = managerService.getAggregationTestById(id);
 
         return new ResponseEntity(testAggregation, HttpStatus.OK);
@@ -410,6 +410,18 @@ public class ManagerController {
 
         List<com.reactit.Skillsapply.dto.TestsDTO.Question> testAggregation
                 = managerService.getAggregationQuestionById(id);
+
+        return new ResponseEntity(testAggregation, HttpStatus.OK);
+
+    }
+
+    @ApiOperation(value = "Get Question By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getResults/{id}")
+    public ResponseEntity<Map<String, Object>> getResultById(@PathVariable String id) throws Exception {
+
+        List<com.reactit.Skillsapply.dto.TestsDTO.Question> testAggregation
+                = managerService.getAggregationResultQuestion(id);
 
         return new ResponseEntity(testAggregation, HttpStatus.OK);
 
