@@ -2,6 +2,7 @@ package com.reactit.Skillsapply.controller;
 
 import com.google.common.io.Files;
 import com.reactit.Skillsapply.dto.QuestionDTO;
+import com.reactit.Skillsapply.dto.ResultDTO.CorrectResultDTO;
 import com.reactit.Skillsapply.dto.TestDTO;
 import com.reactit.Skillsapply.dto.UpdatePassword;
 import com.reactit.Skillsapply.model.*;
@@ -562,10 +563,10 @@ public class ManagerController {
     @GetMapping(value = "/getResults/{id}")
     public ResponseEntity<Map<String, Object>> getResultById(@PathVariable String id) throws Exception {
 
-        List<com.reactit.Skillsapply.dto.TestsDTO.Question> testAggregation
+        CorrectResultDTO ResultAggregation
                 = managerService.getAggregationResultQuestion(id);
 
-        return new ResponseEntity(testAggregation, HttpStatus.OK);
+        return new ResponseEntity(ResultAggregation, HttpStatus.OK);
 
     }
 

@@ -1,18 +1,22 @@
 package com.reactit.Skillsapply.service;
 
+import com.reactit.Skillsapply.dto.ResultDTO.CorrectQuestionDTO;
+import com.reactit.Skillsapply.dto.ResultDTO.CorrectResultDTO;
 import com.reactit.Skillsapply.dto.TestsDTO.Question;
-import com.reactit.Skillsapply.dto.TestsDTO.Test;
 import com.reactit.Skillsapply.dto.TestsDTO.TestManager;
 import com.reactit.Skillsapply.model.Answers;
 import com.reactit.Skillsapply.model.Questions;
+import com.reactit.Skillsapply.model.Result;
+import com.reactit.Skillsapply.repository.ResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -21,6 +25,8 @@ public class ManagerServiceImpl implements ManagerService{
 
     private final MongoTemplate mongoTemplate;
 
+    @Autowired
+    ResultRepository resultRepository;
     @Autowired
     public ManagerServiceImpl(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
@@ -160,9 +166,167 @@ public class ManagerServiceImpl implements ManagerService{
         return result.getMappedResults();
     }
 
-    public List<Question> getAggregationResultQuestion(String idTest) {
+    public CorrectResultDTO getAggregationResultQuestion(String idResult) {
+        CorrectResultDTO correctResult = new CorrectResultDTO();
+       Optional<Result> result = resultRepository.findById(idResult);
 
         ProjectionOperation projectionOperation =
+                project()
+                        .and("_id").as("idTest")
+                        .and("name").as("name")
+                        .and("description").as("description")
+                        .and("duration").as("duration")
+                        .and("score").as("score")
+                        .and("level").as("level")
+                        .and("Test").as("questions");
+
+        Aggregation aggregation = newAggregation(
+                // filter tests by id test
+                match(
+                        Criteria.where("_id").is(result.get().getTestId())
+                ),
+                // get questions for the specific test
+                l -> new Document("$lookup",
+                        new Document("from", mongoTemplate.getCollectionName(Questions.class))
+                                .append("let", new Document("questionId",
+                                        new Document("$map",
+                                                new Document("input", "$questionsID")
+                                                        .append("in",
+                                                                new Document("$toObjectId", "$$this")
+                                                        )
+                                        )
+                                ))
+                                .append("pipeline",
+                                        Arrays.asList(new Document("$match",
+                                                new Document("$expr",
+                                                        new Document("$in", Arrays.asList("$_id", "$$questionId"))))
+                                        ))
+                                .append("as", "Test")),
+                l -> new Document("$addFields", new Document("answersId" ,new Document("$reduce",
+                        new Document("input", "$Test")
+                                .append("initialValue",Arrays.asList())
+                                .append("in",
+                                        new Document("$concatArrays", Arrays.asList("$$value", "$$this.answersID"))
+                                )))
+                ),
+
+                l -> new Document("$lookup",
+                        new Document("from", mongoTemplate.getCollectionName(Answers.class))
+                                .append("let", new Document("idQuestion",
+                                        new Document("$map",
+                                                new Document("input", "$answersId")
+                                                        .append("in",
+                                                                new Document("$toObjectId", "$$this")
+                                                        )
+                                        )
+                                ))
+                                .append("pipeline",
+                                        Arrays.asList(new Document("$match",
+                                                new Document("$expr",
+                                                        new Document("$in", Arrays.asList("$_id", "$$idQuestion"))))
+                                        ))
+                                .append("as", "answers")),
+
+                l -> new Document("$addFields", new Document("Test" ,new Document("$map",
+                        new Document("input", "$Test")
+                                .append("in",
+                                        new Document("$mergeObjects", Arrays.asList("$$this",
+                                                new Document("answers",new Document("$map", new Document(
+                                                        new Document("input", "$$this.answersID")
+                                                                .append("in",new Document("$mergeObjects",
+                                                                        Arrays.asList(new Document("$arrayElemAt",
+                                                                                Arrays.asList("$answers",new Document("$indexOfArray",
+                                                                                                Arrays.asList("$answersId","$$this")
+                                                                                        )
+                                                                                )
+                                                                        ))
+
+                                                                ))
+                                                )
+
+                                                ))
+                                        ))
+                                )))
+                ),
+                projectionOperation
+        );
+
+
+        AggregationResults<TestManager> Test = mongoTemplate.aggregate(
+                aggregation, "Tests", TestManager.class);
+
+        TestManager testManager =  Test.getMappedResults().get(0);
+        AtomicReference<Float> score = new AtomicReference<>((float) 0);
+
+        testManager.getQuestions().forEach((question) -> {
+            ArrayList<String> correctAnswers= new ArrayList<>();
+            question.getAnswers().forEach((answer) -> {
+                if(answer.isStatus()){
+                    correctAnswers.add(answer.getId());
+                }
+           });
+            result.get().getResult().forEach((questionResult) -> {
+                if(questionResult.getQuestionId().equals(question.getId())){
+                    CorrectQuestionDTO correctQuestionDTO = new CorrectQuestionDTO();
+                    ArrayList<CorrectQuestionDTO> correctQ = new ArrayList<>();
+
+                    if(question.getQuestionType().equals("10")){
+
+                        if(questionResult.getAnswersId().size() == correctAnswers.size() && correctAnswers.containsAll(questionResult.getAnswersId())){
+                            correctQuestionDTO.setQuestion(question);
+                            correctQuestionDTO.setCorrect(true);
+                            correctQ.addAll(correctResult.getCorrectQuestion());
+                            correctQ.add(correctQuestionDTO);
+                            correctResult.setCorrectQuestion(correctQ);
+                            score.updateAndGet(v -> new Float((float) (v + question.getPoints())));
+                        }else{
+                            correctQuestionDTO.setQuestion(question);
+                            correctQuestionDTO.setCorrect(false);
+                            correctQ.addAll(correctResult.getCorrectQuestion());
+                            correctQ.add(correctQuestionDTO);
+                            correctResult.setCorrectQuestion(correctQ);
+                        }
+                    }
+                    if(question.getQuestionType().equals("20")){
+                        if(questionResult.getAnswer().toLowerCase(Locale.ROOT).equals(question.getAnswers().get(0).getAnswer().toLowerCase(Locale.ROOT))){
+                            correctQuestionDTO.setQuestion(question);
+                            correctQuestionDTO.setCorrect(true);
+                            correctQ.addAll(correctResult.getCorrectQuestion());
+                            correctQ.add(correctQuestionDTO);
+                            correctResult.setCorrectQuestion(correctQ);
+                            score.updateAndGet(v -> new Float((float) (v + question.getPoints())));
+                        }else{
+                            correctQuestionDTO.setQuestion(question);
+                            correctQuestionDTO.setCorrect(false);
+                            correctQ.addAll(correctResult.getCorrectQuestion());
+                            correctQ.add(correctQuestionDTO);
+                            correctResult.setCorrectQuestion(correctQ);
+                        }
+                    }
+
+                }
+            });
+        });
+
+        correctResult.setIdTest(testManager.getIdTest());
+        correctResult.setDescription(testManager.getDescription());
+        correctResult.setLevel(testManager.getLevel());
+        correctResult.setDuration(testManager.getDuration());
+        correctResult.setScore(testManager.getScore());
+        correctResult.setName(testManager.getName());
+        correctResult.setDurationSpent(result.get().getDuration());
+        correctResult.setScoreCollected(Float.parseFloat(String.valueOf(score)));
+        correctResult.setScorepercentage((int) ((Float.parseFloat(String.valueOf(score))/testManager.getScore())*100));
+
+        return correctResult;
+
+
+
+
+
+
+
+     /*   ProjectionOperation projectionOperation =
                 project()
                         .and("question").as("question")
                         .and("questionType").as("questionType")
@@ -263,6 +427,6 @@ public class ManagerServiceImpl implements ManagerService{
 
         AggregationResults<Question> result = mongoTemplate.aggregate(
                 aggregation, "Results", Question.class);
-        return result.getMappedResults();
+        return result.getMappedResults();  */
     }
 }
