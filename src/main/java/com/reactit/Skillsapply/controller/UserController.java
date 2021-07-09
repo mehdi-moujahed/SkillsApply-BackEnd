@@ -282,6 +282,28 @@ public class UserController {
         }
     }
 
+    @ApiOperation(value = "Get Candidates by managerID")
+//    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
+    @GetMapping(value = "/getNumberOfCandidates/{id}")
+    public ResponseEntity<Void> getNumberOfCandidates(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "5") int size,
+                                                 @PathVariable("id") String id
+                                                ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+
+            Pageable paging = PageRequest.of(page, size);
+            Page<User> pageTuts;
+            pageTuts = userRepository.findByManagerID(id,paging);
+            response.put("totalCandidates", pageTuts.getTotalElements());
+            return new ResponseEntity(response,HttpStatus.OK);
+
+        } catch (Exception exception) {
+            response.put("error",exception);
+            return new ResponseEntity(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @ApiOperation(value = "Candidate Registration")
 //    @PreAuthorize("hasAuthority('USER') or hasRole('MANAGER')")
     @PostMapping(value = "/candidateSignup")

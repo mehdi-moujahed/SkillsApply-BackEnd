@@ -469,10 +469,9 @@ public class ManagerController {
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping(value = "/addResultTest")
     public ResponseEntity addResultTest(@RequestBody Result result) throws Exception {
-        HashMap<String, String> response = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
 
         Result dbResult = new Result();
-
         dbResult.setScore(result.getScore());
         dbResult.setManagerId(result.getManagerId());
         dbResult.setTestId(result.getTestId());
@@ -480,9 +479,28 @@ public class ManagerController {
         dbResult.setDuration(result.getDuration());
         dbResult.setResult(result.getResult());
         dbResult.setCreatedAt(new Date());
-        resultRepository.save(dbResult);
-        return new ResponseEntity(dbResult,HttpStatus.OK);
+        Result SavedResult = resultRepository.save(dbResult);
+        if(SavedResult!=null) {
+           CorrectResultDTO resultAggregation
+                   = managerService.getAggregationResultQuestion(SavedResult.getId());
 
+           Optional<User> user = userRepository.findById(SavedResult.getUserId());
+           String mailMsg = "<h1>Résultat du test : " + resultAggregation.getName() + " </h1> " +
+                   "<p> Bonjour <b>" + user.get().getFirstName() + " " + user.get().getLastName() + "</b>, On vous remercie pour le temps que vous avez passé pour le passage du test.</p> <br> " +
+                   "Voici les résulats de votre test : <br> <b> Score : </b>" + resultAggregation.getScoreCollected() + " / " + resultAggregation.getScore() +
+                   "<br> <b> Pourcentage des réponses correctes :  </b>" + resultAggregation.getScorepercentage() + "%" + "<br>"+
+                   "<br> Vous trouverez les résultats en détail dans l'application mobile. <br>"+
+                   "<br> Merci et Bonne journée. "+
+                   "<br> <p>Skills Apply team support</p>" +
+                   " <img src='cid:myLogo'>";
+           sendMail(user.get().getEmail(), "Résultat Test", mailMsg);
+           response.put("email","email envoyé avec succés");
+           response.put("resultat",dbResult);
+           return new ResponseEntity(response, HttpStatus.OK);
+       } else {
+           response.put("message","erreur lors de l'enregistrement du résultat");
+           return new ResponseEntity(response,HttpStatus.BAD_REQUEST);
+       }
     }
 
     @ApiOperation(value = "get test passed")
@@ -537,7 +555,7 @@ public class ManagerController {
     @ApiOperation(value = "Get Test By ID")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping(value = "/getTestManager/{id}")
-    public ResponseEntity<Map<String, Object>> getTestByIdManager(@PathVariable String id) throws Exception {
+    public ResponseEntity<Map<String, Object>> getTestManager(@PathVariable String id) throws Exception {
 
        List<com.reactit.Skillsapply.dto.TestsDTO.TestManager> testAggregation
                = managerService.getAggregationTestById(id);
@@ -558,15 +576,31 @@ public class ManagerController {
 
     }
 
-    @ApiOperation(value = "Get Question By ID")
+    @ApiOperation(value = "Get Result By ID")
 //    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping(value = "/getResults/{id}")
-    public ResponseEntity<Map<String, Object>> getResultById(@PathVariable String id) throws Exception {
+    @GetMapping(value = "/getResults/{id}/{idCandidate}")
+    public ResponseEntity<Map<String, Object>> getResultById(@PathVariable String id, @PathVariable("idCandidate") String idCandidate) throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            CorrectResultDTO resultAggregation
+                    = managerService.getAggregationResultQuestion(id);
 
-        CorrectResultDTO ResultAggregation
-                = managerService.getAggregationResultQuestion(id);
-
-        return new ResponseEntity(ResultAggregation, HttpStatus.OK);
+            Optional<User> user = userRepository.findById(idCandidate);
+            String mailMsg = "<h1>Résultat du test : " + resultAggregation.getName() + " </h1> " +
+                    "<p> Bonjour <b>" + user.get().getFirstName() + " " + user.get().getLastName() + "</b>, On vous remercie pour le temps que vous avez passé pour le passage du test.</p> <br> " +
+                    "Voici les résulats de votre test : <br> <b> Score : </b>" + resultAggregation.getScoreCollected() + " / " + resultAggregation.getScore() +
+                    "<br> <b> Pourcentage des réponses correctes :  </b>" + resultAggregation.getScorepercentage() + "%" + "<br>"+
+                    "<br> Vous trouverez les résultats en détail dans l'application mobile. <br>"+
+                    "<br> Merci et Bonne journée. "+
+                    "<br> <p>Skills Apply team support</p>" +
+                    " <img src='cid:myLogo'>";
+            sendMail(user.get().getEmail(), "Résultat Test", mailMsg);
+            response.put("email","email envoyé avec succés");
+            response.put("Result ",resultAggregation);
+            return new ResponseEntity(response, HttpStatus.OK);
+        } catch (MessagingException  | IOException exception) {
+            return new ResponseEntity(exception,HttpStatus.BAD_REQUEST);
+        }
 
     }
 

@@ -288,7 +288,7 @@ public class ManagerServiceImpl implements ManagerService{
                         }
                     }
                     if(question.getQuestionType().equals("20")){
-                        if(questionResult.getAnswer().toLowerCase(Locale.ROOT).equals(question.getAnswers().get(0).getAnswer().toLowerCase(Locale.ROOT))){
+                        if(questionResult.getAnswer().toLowerCase(Locale.ROOT).trim().equals(question.getAnswers().get(0).getAnswer().toLowerCase(Locale.ROOT).trim())){
                             correctQuestionDTO.setQuestion(question);
                             correctQuestionDTO.setCorrect(true);
                             correctQ.addAll(correctResult.getCorrectQuestion());
@@ -320,113 +320,5 @@ public class ManagerServiceImpl implements ManagerService{
 
         return correctResult;
 
-
-
-
-
-
-
-     /*   ProjectionOperation projectionOperation =
-                project()
-                        .and("question").as("question")
-                        .and("questionType").as("questionType")
-                        .and("duration").as("duration")
-                        .and("points").as("points")
-                        .and("level").as("level")
-                        .and("answers").as("answers");
-
-        Aggregation aggregation = newAggregation(
-                // filter question by id question
-                match(
-                        Criteria.where("_id").is(idTest)
-                ),
-
-                // get all answers ID
-                l -> new Document("$lookup",
-                        new Document("from", mongoTemplate.getCollectionName(com.reactit.Skillsapply.model.Test.class))
-                                .append("let", new Document("idTest",
-                                        new Document("$toObjectId", "$testId")
-                                ))
-                                .append("pipeline",
-                                        Arrays.asList(new Document("$match",
-                                                new Document("$expr",
-                                                        new Document("$eq", Arrays.asList("$_id", "$$idTest"))))
-                                        ))
-                                .append("as", "test")),
-
-                l -> new Document("$unwind",new Document("path","$test")
-                ),
-
-                l -> new Document("$lookup",
-                        new Document("from", mongoTemplate.getCollectionName(Questions.class))
-                                .append("let", new Document("idQuestion",
-                                        new Document("$map",
-                                                new Document("input", "$test.questionsID")
-                                                        .append("in",
-                                                                new Document("$toObjectId", "$$this")
-                                                        )
-                                        )
-                                ))
-                                .append("pipeline",
-                                        Arrays.asList(new Document("$match",
-                                                new Document("$expr",
-                                                        new Document("$in", Arrays.asList("$_id", "$$idQuestion"))))
-                                        ))
-                                .append("as", "questions")),
-
-                l -> new Document("$addFields", new Document("answersId" ,new Document("$reduce",
-                        new Document("input", "$questions")
-                                .append("initialValue",Arrays.asList())
-                                .append("in",
-                                        new Document("$concatArrays", Arrays.asList("$$value", "$$this.answersID"))
-                                )))
-                ),
-
-                l -> new Document("$lookup",
-                        new Document("from", mongoTemplate.getCollectionName(Answers.class))
-                                .append("let", new Document("idQuestion",
-                                        new Document("$map",
-                                                new Document("input", "$answersId")
-                                                        .append("in",
-                                                                new Document("$toObjectId", "$$this")
-                                                        )
-                                        )
-                                ))
-                                .append("pipeline",
-                                        Arrays.asList(new Document("$match",
-                                                new Document("$expr",
-                                                        new Document("$in", Arrays.asList("$_id", "$$idQuestion"))))
-                                        ))
-                                .append("as", "answers")),
-
-                    l -> new Document("$addFields", new Document("questions" ,new Document("$map",
-                        new Document("input", "$questions")
-                                .append("in",
-                                        new Document("$mergeObjects", Arrays.asList("$$this",
-                                                new Document("answersID",new Document("$map", new Document(
-                                                        new Document("input", "$$this.answersID")
-                                                                .append("in",new Document("$mergeObjects",
-                                                                        Arrays.asList(new Document("$arrayElemAt",
-                                                                                Arrays.asList("$answers",new Document("$indexOfArray",
-                                                                                                Arrays.asList("$answersId","$$this")
-                                                                                        )
-                                                                                )
-                                                                                ))
-
-                                                                ))
-                                                )
-
-                                                ))
-                                        ))
-                                )))
-                ),
-
-                projectionOperation
-        );
-
-
-        AggregationResults<Question> result = mongoTemplate.aggregate(
-                aggregation, "Results", Question.class);
-        return result.getMappedResults();  */
     }
 }

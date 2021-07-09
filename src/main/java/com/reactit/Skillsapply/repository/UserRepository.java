@@ -26,6 +26,5 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Page<User> findByManagerIDAndRolesAndDiploma(String managerID, String roles,int diploma ,Pageable pageable);
 
-
-
+    Page <User> findByManagerID (String managerID, Pageable pageable);
 }
