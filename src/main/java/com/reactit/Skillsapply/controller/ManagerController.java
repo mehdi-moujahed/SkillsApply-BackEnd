@@ -2,6 +2,7 @@ package com.reactit.Skillsapply.controller;
 
 import com.google.common.io.Files;
 import com.reactit.Skillsapply.dto.QuestionDTO;
+import com.reactit.Skillsapply.dto.ResultDTO.CorrectAllResultDTO;
 import com.reactit.Skillsapply.dto.ResultDTO.CorrectResultDTO;
 import com.reactit.Skillsapply.dto.TestDTO;
 import com.reactit.Skillsapply.dto.UpdatePassword;
@@ -576,6 +577,8 @@ public class ManagerController {
 
     }
 
+
+
     @ApiOperation(value = "Get Result By ID")
 //    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping(value = "/getResults/{id}/{idCandidate}")
@@ -601,6 +604,18 @@ public class ManagerController {
         } catch (MessagingException  | IOException exception) {
             return new ResponseEntity(exception,HttpStatus.BAD_REQUEST);
         }
+
+    }
+
+    @ApiOperation(value = "Get Result By ID")
+//    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping(value = "/getAllResults/{id}")
+    public ResponseEntity<Map<String, Object>> getAllResults(@PathVariable String id) throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        ArrayList<CorrectAllResultDTO> testAggregation
+                = managerService.getAggregationAllTests(id);
+
+        return new ResponseEntity(testAggregation, HttpStatus.OK);
 
     }
 
